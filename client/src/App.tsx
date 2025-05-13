@@ -103,6 +103,92 @@ function App() {
           <Loader />
           <FloatingTitle />
           <Toaster position="top-right" richColors />
+          
+          {/* Context Menu */}
+          {contextMenuVisible && (
+            <SaasPlacementMenu 
+              position={contextMenuPosition}
+              onClose={hideContextMenu}
+              onAddProduct={() => setIsPlacingProduct(true)}
+            />
+          )}
+          
+          {/* Product Form */}
+          {isPlacingProduct && placementPosition && (
+            <div className="lunar-ui">
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+                <div className="bg-card p-6 rounded-lg w-full max-w-md">
+                  <h2 className="text-xl font-bold mb-4">Add SaaS Product</h2>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    handleAddProduct({
+                      name: formData.get('name') as string,
+                      description: formData.get('description') as string,
+                      url: formData.get('url') as string
+                    });
+                  }}>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Name</label>
+                        <input 
+                          type="text" 
+                          name="name" 
+                          className="w-full p-2 bg-secondary rounded border border-border" 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Description</label>
+                        <textarea 
+                          name="description" 
+                          className="w-full p-2 bg-secondary rounded border border-border" 
+                          rows={3} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">URL</label>
+                        <input 
+                          type="url" 
+                          name="url" 
+                          className="w-full p-2 bg-secondary rounded border border-border" 
+                          required 
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <button 
+                          type="button" 
+                          className="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/80"
+                          onClick={() => {
+                            hideContextMenu();
+                            setIsPlacingProduct(false);
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
+                        >
+                          Add Product
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Selected Product Popup */}
+          {selectedProduct && (
+            <ProductPopup 
+              product={selectedProduct}
+              position={selectedProduct.position as [number, number, number]}
+              onClose={() => setSelectedProduct(null)}
+            />
+          )}
         </>
       )}
     </>

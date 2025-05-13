@@ -1,17 +1,18 @@
-import { useState, useCallback, useEffect } from "react";
+// This hook is now deprecated as the context menu state is managed by useLunarStore
+// This file is kept for backward compatibility during the migration
 
-interface ContextMenu {
-  visible: boolean;
-  position: { x: number; y: number };
-}
+import { useCallback } from "react";
+import { useLunarStore } from "../lib/stores/useLunarStore";
 
 export const useRightClickMenu = () => {
-  const [contextMenu, setContextMenu] = useState<ContextMenu>({
-    visible: false,
-    position: { x: 0, y: 0 }
-  });
+  const { 
+    contextMenuVisible, 
+    contextMenuPosition, 
+    showContextMenu: showMenu, 
+    hideContextMenu 
+  } = useLunarStore();
   
-  // Show the context menu
+  // Show the context menu (legacy adapter)
   const showContextMenu = useCallback((event: MouseEvent | React.MouseEvent) => {
     if (!event) {
       console.error('No event provided to showContextMenu');
@@ -30,37 +31,15 @@ export const useRightClickMenu = () => {
       y = event.clientY;
     }
     
-    setContextMenu({
-      visible: true,
-      position: { x, y }
-    });
-  }, []);
+    showMenu({ x, y });
+  }, [showMenu]);
   
-  // Hide the context menu
-  const hideContextMenu = useCallback(() => {
-    setContextMenu((prev) => ({
-      ...prev,
-      visible: false
-    }));
-  }, []);
-  
-  // Handle clicks outside to hide the menu
-  useEffect(() => {
-    const handleClickOutside = () => {
-      if (contextMenu.visible) {
-        hideContextMenu();
-      }
-    };
-    
-    window.addEventListener("click", handleClickOutside);
-    
-    return () => {
-      window.removeEventListener("click", handleClickOutside);
-    };
-  }, [contextMenu.visible, hideContextMenu]);
-  
+  // Return a compatible API with the old implementation
   return {
-    contextMenu,
+    contextMenu: {
+      visible: contextMenuVisible,
+      position: contextMenuPosition
+    },
     showContextMenu,
     hideContextMenu
   };
