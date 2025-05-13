@@ -24,8 +24,8 @@ const GroundSurface = ({ onRightClick }: GroundSurfaceProps) => {
     const bumpCtx = bumpCanvas.getContext("2d");
     
     if (albedoCtx && bumpCtx) {
-      // Base color - lunar grey
-      albedoCtx.fillStyle = "#b8b8b8";
+      // Base color - lighter lunar grey
+      albedoCtx.fillStyle = "#d0d0d0";
       albedoCtx.fillRect(0, 0, albedoCanvas.width, albedoCanvas.height);
       
       // Base bump - neutral grey
@@ -216,9 +216,12 @@ const GroundSurface = ({ onRightClick }: GroundSurfaceProps) => {
         <sphereGeometry args={[50, 128, 128, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial 
           map={baseTexture}
-          roughness={0.9}
-          metalness={0.1}
-          color="#7a7a7a"
+          bumpMap={bumpTexture}
+          normalMap={normalTexture}
+          bumpScale={0.05}
+          roughness={0.8}
+          metalness={0.2}
+          color="#d8d8d8"
         />
       </mesh>
       

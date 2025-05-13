@@ -73,11 +73,12 @@ const LunarEnvironment = () => {
     if (controls.current) {
       controls.current.target.set(0, 0, 0);
       
-      // Limit orbit controls
+      // Set orbit control limits
       controls.current.minPolarAngle = Math.PI * 0.2; // Don't go below the horizon
-      controls.current.maxPolarAngle = Math.PI * 0.4; // Don't go too high above
-      controls.current.minAzimuthAngle = -Math.PI * 0.4; // Limit rotation left
-      controls.current.maxAzimuthAngle = Math.PI * 0.4; // Limit rotation right
+      controls.current.maxPolarAngle = Math.PI * 0.5; // Don't go too high above
+      // Remove azimuth limits to enable 360-degree rotation
+      controls.current.minAzimuthAngle = -Infinity; // No limit for left rotation
+      controls.current.maxAzimuthAngle = Infinity; // No limit for right rotation
       controls.current.minDistance = 20; // Don't zoom in too close
       controls.current.maxDistance = 50; // Don't zoom out too far
       controls.current.enablePan = false; // Disable panning

@@ -110,7 +110,7 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
     return geometry;
   }, []);
 
-  // Flag waving animation
+  // Flag waving animation - more subtle and restrained
   const updateFlag = (geometry: THREE.BufferGeometry, time: number) => {
     const positions = geometry.attributes.position as THREE.BufferAttribute;
     
@@ -118,19 +118,21 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       const x = positions.getX(i);
       const y = positions.getY(i);
       
-      // Only add wave effect to the flag part (not the pole)
-      if (x > -0.7) {
-        // Flag wave amplitude increases as we move right
-        const waveStrength = (x + 0.7) / 1.5 * 0.1;
-        const waveX = Math.sin(y * 5 + time * 2) * waveStrength;
-        const waveY = Math.sin(x * 5 + time * 1.5) * waveStrength * 0.2;
+      // Only add wave effect to the edge of the flag (not near the pole)
+      if (x > -0.3) {
+        // Flag wave amplitude increases as we move right but much more subtly
+        const waveStrength = (x + 0.3) / 1.5 * 0.04; // Reduced amplitude
         
-        // Apply wave deformation
+        // Use slower time factor for more gentle motion
+        const waveX = Math.sin(y * 3 + time * 1.5) * waveStrength;
+        const waveY = Math.sin(x * 2 + time * 0.8) * waveStrength * 0.1;
+        
+        // Apply reduced wave deformation
         positions.setXYZ(
           i,
           x + waveX,
           y + waveY,
-          waveX * 2 // Z-axis displacement for 3D effect
+          waveX * 0.5 // Reduced Z-axis displacement
         );
       }
     }
@@ -204,25 +206,26 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
         />
       </mesh>
       
-      {/* Flag pole */}
+      {/* Flag pole - shorter and vertical */}
       <animated.mesh 
-        position={[0, 1.5, 0]} 
+        position={[0, 0.9, 0]} 
         rotation-x={poleSpring.rotateX}
         rotation-y={poleSpring.rotateY}
         rotation-z={poleSpring.rotateZ}
       >
-        <cylinderGeometry args={[0.03, 0.03, 3, 8]} />
+        <cylinderGeometry args={[0.02, 0.02, 1.8, 8]} />
         <meshStandardMaterial 
           color="#a0a0a0" 
           roughness={0.5}
           metalness={0.9}
         />
         
-        {/* Flag with logo */}
+        {/* Flag with logo - smaller and positioned right */}
         <mesh 
           ref={floatingRef} 
-          position={[0.75, 0, 0]} 
+          position={[0.35, 0.7, 0]} 
           rotation={[0, Math.PI/2, 0]}
+          scale={[0.7, 0.5, 0.7]}
           geometry={flagGeometry}
         >
           <meshStandardMaterial 
@@ -244,10 +247,10 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
         />
       )}
       
-      {/* Selected marker (removed name label since it's on the flag) */}
+      {/* Selected marker - smaller yellow indicator on top of pole */}
       {isSelected && (
-        <mesh position={[0, 3.4, 0]}>
-          <sphereGeometry args={[0.1, 16, 16]} />
+        <mesh position={[0, 2.1, 0]}>
+          <sphereGeometry args={[0.05, 16, 16]} />
           <meshBasicMaterial color="#ffff00" />
         </mesh>
       )}
