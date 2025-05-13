@@ -4,14 +4,55 @@ import { Loader } from "@react-three/drei";
 import { Toaster } from "sonner";
 import * as THREE from "three";
 import { useAudio } from "./lib/stores/useAudio";
+import { useLunarStore } from "./lib/stores/useLunarStore"; 
+import { useSupabaseProducts } from "./hooks/useSupabaseProducts";
 import LoadingScreen from "./components/UI/LoadingScreen";
 import FloatingTitle from "./components/UI/FloatingTitle";
 import LunarEnvironment from "./components/LunarEnvironment";
+import SaasPlacementMenu from "./components/UI/SaasPlacementMenu";
+import ProductPopup from "./components/UI/ProductPopup";
 import "@fontsource/inter";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const { setBackgroundMusic } = useAudio();
+  const { 
+    selectedProduct, 
+    setSelectedProduct,
+    placementPosition,
+    setPlacementPosition,
+    contextMenuVisible,
+    contextMenuPosition,
+    hideContextMenu,
+    isPlacingProduct,
+    setIsPlacingProduct
+  } = useLunarStore();
+  
+  const { addProduct, fetchProducts } = useSupabaseProducts();
+  
+  // Handle adding a new product
+  const handleAddProduct = async (productData: any) => {
+    if (!placementPosition) return;
+    
+    // Create product object with position data
+    const newProduct = {
+      ...productData,
+      position: [placementPosition.x, placementPosition.y, placementPosition.z]
+    };
+    
+    // Add product to database
+    try {
+      await addProduct(newProduct);
+      hideContextMenu();
+      setIsPlacingProduct(false);
+      setPlacementPosition(null);
+      
+      // Refresh product list
+      fetchProducts();
+    } catch (error) {
+      console.error('Error adding product:', error);
+    }
+  };
   
   // Setup background music
   useEffect(() => {
@@ -33,8 +74,6 @@ function App() {
     
     return () => clearTimeout(timer);
   }, [setBackgroundMusic]);
-  
-  // No need for custom THREE definition now that we imported it directly
   
   return (
     <>

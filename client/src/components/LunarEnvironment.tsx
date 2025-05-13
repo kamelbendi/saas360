@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { useLunarStore } from "../lib/stores/useLunarStore";
 import { useSupabaseProducts } from "../hooks/useSupabaseProducts";
@@ -13,11 +13,11 @@ import CelestialBodies from "./CelestialBodies";
 import AnimatedBackground from "./AnimatedBackground";
 import { createRandomAsteroids } from "./FloatingAsteroid";
 
-// Main component for the lunar environment
+// Main component for the lunar environment (3D only)
 const LunarEnvironment = () => {
-  const { camera, gl } = useThree();
+  const { camera } = useThree();
   const controls = useRef<any>();
-  const { products, fetchProducts, addProduct } = useSupabaseProducts();
+  const { products, fetchProducts } = useSupabaseProducts();
   const { 
     selectedProduct, 
     setSelectedProduct,
@@ -25,9 +25,7 @@ const LunarEnvironment = () => {
     setPlacementPosition,
     showContextMenu,
     hideContextMenu,
-    setCameraPosition,
-    isPlacingProduct,
-    setIsPlacingProduct
+    setCameraPosition
   } = useLunarStore();
 
   // Handle right click on the moon surface
@@ -52,21 +50,8 @@ const LunarEnvironment = () => {
     });
   };
 
-  // Add a product at the current placement position
-  const handleAddProduct = async (productData: any) => {
-    if (!placementPosition) return;
-    
-    try {
-      await addProduct({
-        ...productData,
-        position: [placementPosition.x, placementPosition.y, placementPosition.z]
-      });
-      hideContextMenu();
-      setIsPlacingProduct(false);
-    } catch (error) {
-      console.error("Failed to add product:", error);
-    }
-  };
+  // This component no longer handles adding products directly
+  // Product addition is now managed in App.tsx
 
   // Load products on mount
   useEffect(() => {
@@ -77,7 +62,7 @@ const LunarEnvironment = () => {
   useEffect(() => {
     // Set initial camera position
     const initialPosition = new THREE.Vector3(0, 20, 30);
-    setCameraPosition(initialPosition);
+    setCameraPosition([initialPosition.x, initialPosition.y, initialPosition.z]);
     camera.position.copy(initialPosition);
     
     if (controls.current) {
@@ -158,82 +143,7 @@ const LunarEnvironment = () => {
         target={[0, 0, 0]}
       />
       
-      {/* No UI Elements inside the canvas */}
-      
-      {isPlacingProduct && placementPosition && (
-        <div className="lunar-ui">
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-card p-6 rounded-lg w-full max-w-md">
-              <h2 className="text-xl font-bold mb-4">Add SaaS Product</h2>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                handleAddProduct({
-                  name: formData.get('name') as string,
-                  description: formData.get('description') as string,
-                  url: formData.get('url') as string
-                });
-              }}>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Name</label>
-                    <input 
-                      type="text" 
-                      name="name" 
-                      className="w-full p-2 bg-secondary rounded border border-border" 
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Description</label>
-                    <textarea 
-                      name="description" 
-                      className="w-full p-2 bg-secondary rounded border border-border" 
-                      rows={3} 
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">URL</label>
-                    <input 
-                      type="url" 
-                      name="url" 
-                      className="w-full p-2 bg-secondary rounded border border-border" 
-                      required 
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2 pt-2">
-                    <button 
-                      type="button" 
-                      className="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/80"
-                      onClick={() => {
-                        hideContextMenu();
-                        setIsPlacingProduct(false);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
-                    >
-                      Add Product
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {selectedProduct && (
-        <ProductPopup 
-          product={selectedProduct}
-          position={selectedProduct.position as [number, number, number]}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
+      {/* No UI Elements inside the canvas - UI moved to App.tsx */}
     </>
   );
 };
