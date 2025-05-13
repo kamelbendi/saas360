@@ -5,11 +5,11 @@ import * as THREE from "three";
 import { useLunarStore } from "../lib/stores/useLunarStore";
 import { useRightClickMenu } from "../hooks/useRightClickMenu";
 import { useSupabaseProducts } from "../hooks/useSupabaseProducts";
-import MoonSurface from "./MoonSurface";
+import GroundSurface from "./MoonSurface";
 import SaasProduct from "./SaasProduct";
 import SpaceSkybox from "./SpaceSkybox";
 import SaasPlacementMenu from "./UI/SaasPlacementMenu";
-import SaasInfoPanel from "./UI/SaasInfoPanel";
+import ProductPopup from "./UI/ProductPopup";
 
 // Define Controls for keyboard navigation
 enum Controls {
@@ -76,43 +76,26 @@ const LunarEnvironment = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Frame update for camera controls
-  useFrame(() => {
-    const speed = 0.2;
-    let moved = false;
-    const newPosition = cameraPosition.clone();
-
-    if (forward) {
-      newPosition.z -= speed;
-      moved = true;
+  // Set fixed camera position
+  useEffect(() => {
+    // Set initial camera position
+    const initialPosition = new THREE.Vector3(0, 20, 30);
+    setCameraPosition(initialPosition);
+    camera.position.copy(initialPosition);
+    
+    if (controls.current) {
+      controls.current.target.set(0, 0, 0);
+      
+      // Limit orbit controls
+      controls.current.minPolarAngle = Math.PI * 0.2; // Don't go below the horizon
+      controls.current.maxPolarAngle = Math.PI * 0.4; // Don't go too high above
+      controls.current.minAzimuthAngle = -Math.PI * 0.4; // Limit rotation left
+      controls.current.maxAzimuthAngle = Math.PI * 0.4; // Limit rotation right
+      controls.current.minDistance = 20; // Don't zoom in too close
+      controls.current.maxDistance = 50; // Don't zoom out too far
+      controls.current.enablePan = false; // Disable panning
     }
-    if (backward) {
-      newPosition.z += speed;
-      moved = true;
-    }
-    if (left) {
-      newPosition.x -= speed;
-      moved = true;
-    }
-    if (right) {
-      newPosition.x += speed;
-      moved = true;
-    }
-    if (up) {
-      newPosition.y += speed;
-      moved = true;
-    }
-    if (down && newPosition.y > 1) {
-      newPosition.y -= speed;
-      moved = true;
-    }
-
-    if (moved) {
-      setCameraPosition(newPosition);
-      camera.position.copy(newPosition);
-      controls.current?.target.set(newPosition.x, 0, newPosition.z - 5);
-    }
-  });
+  }, [camera, setCameraPosition]);
 
   return (
     <>
@@ -139,8 +122,8 @@ const LunarEnvironment = () => {
       {/* Point light to simulate Earth's reflected light */}
       <pointLight position={[-50, 20, -50]} intensity={0.5} color="#4fc3f7" />
       
-      {/* Moon surface */}
-      <MoonSurface onRightClick={handleRightClick} />
+      {/* Grey curved ground */}
+      <GroundSurface onRightClick={handleRightClick} />
       
       {/* Render all SaaS products */}
       {products.map((product) => (
@@ -161,16 +144,13 @@ const LunarEnvironment = () => {
         saturation={0} 
       />
       
-      {/* Camera controls */}
+      {/* Camera controls - limited to rotation only */}
       <OrbitControls 
         ref={controls}
         enableDamping={true}
         dampingFactor={0.05}
-        minDistance={2}
-        maxDistance={50}
-        minPolarAngle={0.1}
-        maxPolarAngle={Math.PI / 2 - 0.1}
-        enablePan={true}
+        enableZoom={true}
+        enablePan={false}
         target={[0, 0, 0]}
       />
       
@@ -251,8 +231,9 @@ const LunarEnvironment = () => {
       )}
       
       {selectedProduct && (
-        <SaasInfoPanel 
+        <ProductPopup 
           product={selectedProduct}
+          position={selectedProduct.position as [number, number, number]}
           onClose={() => setSelectedProduct(null)}
         />
       )}

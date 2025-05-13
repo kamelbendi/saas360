@@ -2,130 +2,111 @@ import { useRef, useMemo } from "react";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-interface MoonSurfaceProps {
+interface GroundSurfaceProps {
   onRightClick: (event: any) => void;
 }
 
-const MoonSurface = ({ onRightClick }: MoonSurfaceProps) => {
+const GroundSurface = ({ onRightClick }: GroundSurfaceProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
-  // Using better textures for lunar surface
-  const baseTexture = useTexture("/textures/moon_craters.svg");
-  const normalMap = useTexture("/textures/moon_normal.svg");
-  
-  // Configure textures
-  baseTexture.wrapS = baseTexture.wrapT = THREE.RepeatWrapping;
-  baseTexture.repeat.set(4, 4);
-  normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(4, 4);
-  
-  // Create displacement map for crater effects
-  const displacementMap = useMemo(() => {
+  // Create a grey textured surface
+  const baseTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 1024;
     canvas.height = 1024;
     const ctx = canvas.getContext("2d");
     
     if (ctx) {
-      // Fill with base gray
-      ctx.fillStyle = "#333";
+      // Fill with base grey
+      ctx.fillStyle = "#555555";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Create large crater patterns
-      for (let i = 0; i < 20; i++) {
+      // Add subtle texture
+      for (let i = 0; i < 20000; i++) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
-        const radius = 30 + Math.random() * 80;
+        const size = Math.random() * 2;
         
-        // Crater rim (higher)
-        const rimGradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius);
-        rimGradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
-        rimGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
-        
-        ctx.fillStyle = rimGradient;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Crater depression (lower)
-        const craterGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.8);
-        craterGradient.addColorStop(0, "rgba(30, 30, 30, 0.8)");
-        craterGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
-        
-        ctx.fillStyle = craterGradient;
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 0.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      // Add smaller craters
-      for (let i = 0; i < 100; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const radius = 5 + Math.random() * 25;
-        
-        // Small crater rim
-        const smallRimGradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius);
-        smallRimGradient.addColorStop(0, "rgba(220, 220, 220, 0.7)");
-        smallRimGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
-        
-        ctx.fillStyle = smallRimGradient;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Small crater depression
-        const smallCraterGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.8);
-        smallCraterGradient.addColorStop(0, "rgba(50, 50, 50, 0.6)");
-        smallCraterGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
-        
-        ctx.fillStyle = smallCraterGradient;
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 0.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      // Add subtle noise for texture variation
-      for (let i = 0; i < 10000; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = Math.random() * 3;
-        const brightness = 100 + Math.random() * 100;
-        
-        ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+        // Use different shades of grey
+        const shade = 70 + Math.random() * 40;
+        ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
+      }
+      
+      // Add some slightly lighter areas
+      for (let i = 0; i < 10; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const radius = 50 + Math.random() * 150;
+        
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, "rgba(120, 120, 120, 0.3)");
+        gradient.addColorStop(1, "rgba(85, 85, 85, 0)");
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Add some grid lines
+      ctx.strokeStyle = "rgba(70, 70, 70, 0.3)";
+      ctx.lineWidth = 1;
+      
+      const gridSize = 64;
+      for (let i = 0; i < canvas.width; i += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, canvas.height);
+        ctx.stroke();
+      }
+      
+      for (let i = 0; i < canvas.height; i += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
       }
     }
     
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(8, 8);
     return texture;
   }, []);
 
   return (
-    <mesh 
-      ref={meshRef}
-      rotation={[-Math.PI / 2, 0, 0]} 
-      position={[0, -0.2, 0]} 
-      receiveShadow
-      onContextMenu={onRightClick}
-    >
-      <planeGeometry args={[200, 200, 256, 256]} />
-      <meshStandardMaterial 
-        map={baseTexture}
-        normalMap={normalMap}
-        normalScale={new THREE.Vector2(1.8, 1.8)}
-        displacementMap={displacementMap}
-        displacementScale={0.4}
-        roughness={0.85}
-        metalness={0.1}
-        color="#e1e1e1"
-        aoMapIntensity={1}
-      />
-    </mesh>
+    <>
+      {/* Curved ground (sphere instead of plane) */}
+      <mesh 
+        ref={meshRef}
+        position={[0, -50, 0]} 
+        receiveShadow
+        onContextMenu={onRightClick}
+      >
+        <sphereGeometry args={[50, 128, 128, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial 
+          map={baseTexture}
+          roughness={0.9}
+          metalness={0.1}
+          color="#7a7a7a"
+        />
+      </mesh>
+      
+      {/* Horizon glow */}
+      <mesh position={[0, -49.5, 0]}>
+        <ringGeometry args={[49.8, 50.2, 64]} />
+        <meshBasicMaterial 
+          color="#444444" 
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+    </>
   );
 };
 
-export default MoonSurface;
+export default GroundSurface;
