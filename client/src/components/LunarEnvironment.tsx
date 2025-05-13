@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 import * as THREE from "three";
 import { useLunarStore } from "../lib/stores/useLunarStore";
-import { useRightClickMenu } from "../hooks/useRightClickMenu";
 import { useSupabaseProducts } from "../hooks/useSupabaseProducts";
 import GroundSurface from "./MoonSurface";
 import SaasProduct from "./SaasProduct";
@@ -13,26 +12,23 @@ import ShootingStars from "./ShootingStars";
 import CelestialBodies from "./CelestialBodies";
 import AnimatedBackground from "./AnimatedBackground";
 import { createRandomAsteroids } from "./FloatingAsteroid";
-import SaasPlacementMenu from "./UI/SaasPlacementMenu";
-import ProductPopup from "./UI/ProductPopup";
 
 // Main component for the lunar environment
 const LunarEnvironment = () => {
   const { camera, gl } = useThree();
   const controls = useRef<any>();
   const { products, fetchProducts, addProduct } = useSupabaseProducts();
-  const { selectedProduct, setSelectedProduct } = useLunarStore();
-
-  const [cameraPosition, setCameraPosition] = useState(new THREE.Vector3(0, 5, 15));
-  const [isPlacingProduct, setIsPlacingProduct] = useState(false);
-  const [placementPosition, setPlacementPosition] = useState<THREE.Vector3 | null>(null);
-
-  // Context menu for placing products
   const { 
-    contextMenu, 
-    showContextMenu, 
-    hideContextMenu 
-  } = useRightClickMenu();
+    selectedProduct, 
+    setSelectedProduct,
+    placementPosition,
+    setPlacementPosition,
+    showContextMenu,
+    hideContextMenu,
+    setCameraPosition,
+    isPlacingProduct,
+    setIsPlacingProduct
+  } = useLunarStore();
 
   // Handle right click on the moon surface
   const handleRightClick = (event: any) => {
@@ -50,7 +46,10 @@ const LunarEnvironment = () => {
     
     // Set the placement position and show context menu
     setPlacementPosition(intersect.point);
-    showContextMenu(originalEvent);
+    showContextMenu({
+      x: originalEvent.clientX,
+      y: originalEvent.clientY
+    });
   };
 
   // Add a product at the current placement position
