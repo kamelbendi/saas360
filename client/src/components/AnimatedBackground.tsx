@@ -10,40 +10,46 @@ const AnimatedBackground = () => {
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const mouse = useMemo(() => new THREE.Vector2(), []);
   
-  // Create grid points
+  // Create scattered points (not in a grid) at a distance below the moon
   const { positions, colors, sizes } = useMemo(() => {
-    const gridSize = 20;
-    const spacing = 2;
-    const count = gridSize * gridSize;
+    const particleCount = 100;
+    const radius = 55; // Slightly larger than moon radius to be below surface
     
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const sizes = new Float32Array(particleCount);
     
-    let i = 0;
-    for (let x = 0; x < gridSize; x++) {
-      for (let z = 0; z < gridSize; z++) {
-        const xi = x * 3 + i * 3;
-        
-        // Position in a grid pattern
-        positions[xi] = (x - gridSize / 2) * spacing;
-        positions[xi + 1] = -2; // Just below ground level
-        positions[xi + 2] = (z - gridSize / 2) * spacing;
-        
-        // Base color: blue-ish
-        colors[xi] = 0.1;
-        colors[xi + 1] = 0.3;
-        colors[xi + 2] = 0.8;
-        
-        // Size
-        sizes[i] = 0.3;
-        
-        i++;
-      }
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3;
+      
+      // Generate random points in a hemisphere
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI / 2 + Math.PI / 2; // Bottom hemisphere
+      const r = radius;
+      
+      // Convert to Cartesian coordinates
+      positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[i3 + 1] = r * Math.cos(phi) - 50; // Offset by moon center position
+      positions[i3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+      
+      // Use white/silver colors instead of blue
+      const brightness = 0.7 + Math.random() * 0.3;
+      colors[i3] = brightness;
+      colors[i3 + 1] = brightness;
+      colors[i3 + 2] = brightness;
+      
+      // Vary sizes
+      sizes[i] = 0.1 + Math.random() * 0.2;
     }
     
     return { positions, colors, sizes };
   }, []);
+  
+  // Create initial positions with animation
+  const particlePositions = useMemo(() => {
+    // Create a copy of positions that won't change
+    return new Float32Array(positions);
+  }, [positions]);
   
   // Animate points
   useFrame(({ clock, pointer, viewport }) => {
@@ -67,7 +73,18 @@ const AnimatedBackground = () => {
     for (let i = 0; i < positionAttr.count; i++) {
       const i3 = i * 3;
       
-      // Get current position
+      // Get stored initial position
+      const originalX = particlePositions[i3];
+      const originalY = particlePositions[i3 + 1];
+      const originalZ = particlePositions[i3 + 2];
+      
+      // Add gentle motion - slight twinkle and drift
+      const verticalWave = Math.sin(time * 0.5 + i * 0.2) * 0.2;
+      positionAttr.array[i3] = originalX;
+      positionAttr.array[i3 + 1] = originalY + verticalWave;
+      positionAttr.array[i3 + 2] = originalZ;
+      
+      // Get current updated position
       const x = positionAttr.array[i3];
       const y = positionAttr.array[i3 + 1];
       const z = positionAttr.array[i3 + 2];
@@ -77,30 +94,26 @@ const AnimatedBackground = () => {
       const rayPointDistance = raycaster.ray.distanceToPoint(point);
       const isNearMouse = rayPointDistance < 5;
       
-      // Wave animation with time and position
-      const wave = Math.sin(time * 2 + x * 0.5 + z * 0.5) * 0.1;
-      
-      // Update y position with wave
-      positionAttr.array[i3 + 1] = -2 + wave;
-      
-      // Update color - brighter when near mouse
+      // Update color - twinkle effect
       if (isNearMouse) {
+        // Brighten when mouse is near
         const intensity = 1 - rayPointDistance / 5;
-        colorAttr.array[i3] = 0.4 + intensity * 0.6; // Red
-        colorAttr.array[i3 + 1] = 0.5 + intensity * 0.5; // Green
-        colorAttr.array[i3 + 2] = 1.0; // Blue
+        const glow = 0.7 + intensity * 0.3;
+        colorAttr.array[i3] = glow;     // White-silver glow
+        colorAttr.array[i3 + 1] = glow;
+        colorAttr.array[i3 + 2] = glow;
         
         // Larger size when near mouse
-        sizeAttr.array[i] = 0.5 + intensity * 0.5;
+        sizeAttr.array[i] = 0.2 + intensity * 0.3;
       } else {
-        // Default color animation
-        const colorWave = Math.sin(time + x * 0.2 + z * 0.2) * 0.05 + 0.05;
-        colorAttr.array[i3] = 0.1 + colorWave;
-        colorAttr.array[i3 + 1] = 0.3 + colorWave;
-        colorAttr.array[i3 + 2] = 0.8 + colorWave;
+        // Gentle twinkling for stars
+        const twinkle = Math.sin(time * 2 + i * 10) * 0.15 + 0.85;
+        colorAttr.array[i3] = twinkle;
+        colorAttr.array[i3 + 1] = twinkle;
+        colorAttr.array[i3 + 2] = twinkle;
         
         // Default size with subtle animation
-        sizeAttr.array[i] = 0.3 + Math.sin(time * 3 + i * 0.2) * 0.05;
+        sizeAttr.array[i] = sizes[i] * (0.8 + Math.sin(time + i) * 0.2);
       }
     }
     
