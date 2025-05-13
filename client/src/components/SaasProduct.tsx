@@ -43,19 +43,39 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       ctx.fillRect(0, 0, 256, 128);
       
       // Draw border
-      ctx.strokeStyle = '#2196f3';
+      ctx.strokeStyle = hovered ? '#1976d2' : '#2196f3';
       ctx.lineWidth = 4;
       ctx.strokeRect(2, 2, 252, 124);
       
+      // "SAAS" text at the top of the flag
+      ctx.font = 'bold 16px Arial';
+      ctx.fillStyle = '#000000';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText('SAAS', 128, 10);
+      
+      // Draw logo (circle with first letter of company name)
+      ctx.beginPath();
+      ctx.arc(64, 64, 30, 0, Math.PI * 2);
+      ctx.fillStyle = hovered ? '#1976d2' : '#2196f3';
+      ctx.fill();
+      
+      // First letter of company in white
+      ctx.font = 'bold 36px Arial';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(product.name.charAt(0).toUpperCase(), 64, 64);
+      
       // Draw company name
-      ctx.fillStyle = '#2196f3';
-      ctx.font = 'bold 24px Arial';
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 20px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
       // Wrap text if too long
       const name = product.name;
-      if (name.length > 12) {
+      if (name.length > 10) {
         const words = name.split(' ');
         let line1 = '';
         let line2 = '';
@@ -72,17 +92,19 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
           line2 = name.slice(middle);
         }
         
-        ctx.fillText(line1, 128, 50);
-        ctx.fillText(line2, 128, 80);
+        ctx.fillText(line1, 170, 50);
+        ctx.fillText(line2, 170, 78);
       } else {
-        ctx.fillText(name, 128, 64);
+        ctx.fillText(name, 170, 64);
       }
       
-      // Create simple logo shape
+      // Add underline below SAAS
       ctx.beginPath();
-      ctx.arc(128, 40, 20, 0, Math.PI * 2);
-      ctx.fillStyle = hovered ? '#4fc3f7' : '#2196f3';
-      ctx.fill();
+      ctx.moveTo(88, 28);
+      ctx.lineTo(168, 28);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
     
     return new THREE.CanvasTexture(canvas);
