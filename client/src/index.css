@@ -284,3 +284,122 @@ canvas {
     transform: translateY(-10px);
   }
 }
+
+/* Product Popup Styles */
+.product-popup {
+  width: 300px;
+  background-color: rgba(15, 23, 42, 0.85);
+  border-radius: 8px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  
+  /* Animation properties */
+  opacity: 0;
+  transform: scale(0.9) translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.product-popup.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.popup-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at center,
+    rgba(99, 102, 241, 0.15) 0%,
+    rgba(99, 102, 241, 0) 70%
+  );
+  pointer-events: none;
+  z-index: -1;
+  animation: pulse 4s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.popup-body {
+  margin-bottom: 12px;
+}
+
+.popup-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.popup-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.visit-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgb(99, 102, 241);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.visit-link:hover {
+  background-color: rgb(79, 82, 221);
+}

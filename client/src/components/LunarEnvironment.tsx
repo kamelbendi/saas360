@@ -10,6 +10,7 @@ import SaasProduct from "./SaasProduct";
 import SpaceSkybox from "./SpaceSkybox";
 import FlyingStars from "./FlyingStars";
 import ShootingStars from "./ShootingStars";
+import CelestialBodies from "./CelestialBodies";
 import AnimatedBackground from "./AnimatedBackground";
 import { createRandomAsteroids } from "./FloatingAsteroid";
 import SaasPlacementMenu from "./UI/SaasPlacementMenu";
@@ -123,6 +124,9 @@ const LunarEnvironment = () => {
           onClick={() => setSelectedProduct(product)}
         />
       ))}
+      
+      {/* Celestial bodies like Earth, Mars, etc */}
+      <CelestialBodies />
       
       {/* Flying stars animations */}
       <FlyingStars />
