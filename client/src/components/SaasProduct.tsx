@@ -201,7 +201,6 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
           maxWidth={2}
           outlineWidth={isSelected ? 0.02 : 0}
           outlineColor="#0277bd"
-          font="/fonts/inter.woff"
         >
           {product.name}
         </Text>
