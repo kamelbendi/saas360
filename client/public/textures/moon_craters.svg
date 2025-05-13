@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="5" seed="1" />
+      <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.5 0" />
+    </filter>
+    <filter id="crater1" x="0%" y="0%" width="100%" height="100%">
+      <feGaussianBlur stdDeviation="5" />
+    </filter>
+  </defs>
+  
+  <!-- Moon base color -->
+  <rect width="100%" height="100%" fill="#dcdcdc" />
+  
+  <!-- Noise texture -->
+  <rect width="100%" height="100%" fill="#ffffff" opacity="0.15" filter="url(#noise)" />
+  
+  <!-- Craters with shadows -->
+  <g fill="#b0b0b0">
+    <!-- Large craters -->
+    <circle cx="300" cy="400" r="80" opacity="0.6" />
+    <circle cx="300" cy="400" r="75" fill="#d5d5d5" />
+    <circle cx="300" cy="400" r="70" fill="#e0e0e0" />
+    
+    <circle cx="600" cy="300" r="120" opacity="0.6" />
+    <circle cx="600" cy="300" r="115" fill="#d5d5d5" />
+    <circle cx="600" cy="300" r="110" fill="#e0e0e0" />
+    
+    <circle cx="450" cy="700" r="150" opacity="0.6" />
+    <circle cx="450" cy="700" r="145" fill="#d5d5d5" />
+    <circle cx="450" cy="700" r="140" fill="#e0e0e0" />
+    
+    <circle cx="750" cy="600" r="100" opacity="0.6" />
+    <circle cx="750" cy="600" r="95" fill="#d5d5d5" />
+    <circle cx="750" cy="600" r="90" fill="#e0e0e0" />
+    
+    <!-- Medium craters -->
+    <circle cx="200" cy="200" r="60" opacity="0.6" />
+    <circle cx="200" cy="200" r="55" fill="#d5d5d5" />
+    <circle cx="200" cy="200" r="50" fill="#e0e0e0" />
+    
+    <circle cx="800" cy="800" r="50" opacity="0.6" />
+    <circle cx="800" cy="800" r="45" fill="#d5d5d5" />
+    <circle cx="800" cy="800" r="40" fill="#e0e0e0" />
+    
+    <circle cx="900" cy="200" r="70" opacity="0.6" />
+    <circle cx="900" cy="200" r="65" fill="#d5d5d5" />
+    <circle cx="900" cy="200" r="60" fill="#e0e0e0" />
+    
+    <!-- Small craters -->
+    <circle cx="350" cy="550" r="30" opacity="0.6" />
+    <circle cx="350" cy="550" r="25" fill="#d5d5d5" />
+    <circle cx="350" cy="550" r="20" fill="#e0e0e0" />
+    
+    <circle cx="100" cy="650" r="25" opacity="0.6" />
+    <circle cx="100" cy="650" r="20" fill="#d5d5d5" />
+    <circle cx="100" cy="650" r="15" fill="#e0e0e0" />
+    
+    <circle cx="850" cy="350" r="35" opacity="0.6" />
+    <circle cx="850" cy="350" r="30" fill="#d5d5d5" />
+    <circle cx="850" cy="350" r="25" fill="#e0e0e0" />
+    
+    <circle cx="500" cy="150" r="45" opacity="0.6" />
+    <circle cx="500" cy="150" r="40" fill="#d5d5d5" />
+    <circle cx="500" cy="150" r="35" fill="#e0e0e0" />
+    
+    <circle cx="150" cy="900" r="55" opacity="0.6" />
+    <circle cx="150" cy="900" r="50" fill="#d5d5d5" />
+    <circle cx="150" cy="900" r="45" fill="#e0e0e0" />
+  </g>
+  
+  <!-- Tiny craters scattered around -->
+  <g fill="#b0b0b0">
+    <circle cx="250" cy="300" r="10" opacity="0.4" />
+    <circle cx="550" cy="450" r="8" opacity="0.4" />
+    <circle cx="700" cy="750" r="12" opacity="0.4" />
+    <circle cx="400" cy="200" r="7" opacity="0.4" />
+    <circle cx="300" cy="850" r="9" opacity="0.4" />
+    <circle cx="820" cy="500" r="11" opacity="0.4" />
+    <circle cx="650" cy="100" r="8" opacity="0.4" />
+    <circle cx="780" cy="250" r="7" opacity="0.4" />
+    <circle cx="950" cy="600" r="10" opacity="0.4" />
+    <circle cx="120" cy="480" r="9" opacity="0.4" />
+    <circle cx="370" cy="920" r="10" opacity="0.4" />
+    <circle cx="580" cy="600" r="8" opacity="0.4" />
+    <circle cx="220" cy="720" r="7" opacity="0.4" />
+    <circle cx="900" cy="880" r="11" opacity="0.4" />
+  </g>
+  
+  <!-- Subtle highlands and darker areas -->
+  <path d="M0,0 Q300,200 600,150 T1024,300 V0 Z" fill="#e8e8e8" opacity="0.2" />
+  <path d="M0,1024 Q400,800 800,850 T1024,700 V1024 Z" fill="#c0c0c0" opacity="0.2" />
+  <path d="M0,400 Q200,500 300,600 T500,700 T700,500 T1024,400 V300 Q800,350 500,400 T0,300 Z" fill="#b0b0b0" opacity="0.15" />
+</svg>

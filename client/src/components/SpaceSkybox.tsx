@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import FloatingAsteroid from "./FloatingAsteroid";
+import ShootingStars from "./ShootingStars";
 
 const SpaceSkybox = () => {
   const sphereRef = useRef<THREE.Mesh>(null);
@@ -378,6 +379,34 @@ const SpaceSkybox = () => {
           </mesh>
         );
       })}
+      
+      {/* Animated floating asteroids */}
+      <FloatingAsteroid
+        startPosition={[-300, 100, -200]}
+        endPosition={[300, -50, -100]}
+        duration={25}
+        size={2.5}
+        color="#a0a0a0"
+      />
+      
+      <FloatingAsteroid
+        startPosition={[400, -30, -300]}
+        endPosition={[-200, 80, -250]}
+        duration={35}
+        size={1.8}
+        color="#8d8d8d"
+      />
+      
+      <FloatingAsteroid
+        startPosition={[0, 200, -150]}
+        endPosition={[0, -150, -200]}
+        duration={20}
+        size={3.2}
+        color="#707070"
+      />
+      
+      {/* Shooting stars effect */}
+      <ShootingStars />
     </>
   );
 };

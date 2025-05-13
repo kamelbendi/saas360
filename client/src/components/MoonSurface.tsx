@@ -10,14 +10,14 @@ const MoonSurface = ({ onRightClick }: MoonSurfaceProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
   // Using better textures for lunar surface
-  const baseTexture = useTexture("/textures/lunar_surface.svg");
+  const baseTexture = useTexture("/textures/moon_craters.svg");
   const normalMap = useTexture("/textures/moon_normal.svg");
   
   // Configure textures
   baseTexture.wrapS = baseTexture.wrapT = THREE.RepeatWrapping;
-  baseTexture.repeat.set(8, 8);
+  baseTexture.repeat.set(4, 4);
   normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
-  normalMap.repeat.set(8, 8);
+  normalMap.repeat.set(4, 4);
   
   // Create displacement map for crater effects
   const displacementMap = useMemo(() => {
@@ -28,23 +28,73 @@ const MoonSurface = ({ onRightClick }: MoonSurfaceProps) => {
     
     if (ctx) {
       // Fill with base gray
-      ctx.fillStyle = "#444";
+      ctx.fillStyle = "#333";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Add random craters
+      // Create large crater patterns
+      for (let i = 0; i < 20; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const radius = 30 + Math.random() * 80;
+        
+        // Crater rim (higher)
+        const rimGradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius);
+        rimGradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+        rimGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
+        
+        ctx.fillStyle = rimGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Crater depression (lower)
+        const craterGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.8);
+        craterGradient.addColorStop(0, "rgba(30, 30, 30, 0.8)");
+        craterGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
+        
+        ctx.fillStyle = craterGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Add smaller craters
       for (let i = 0; i < 100; i++) {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
-        const radius = 5 + Math.random() * 50;
+        const radius = 5 + Math.random() * 25;
         
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-        gradient.addColorStop(0, "rgba(255, 255, 255, 0.8)");
-        gradient.addColorStop(0.3, "rgba(200, 200, 200, 0.3)");
-        gradient.addColorStop(1, "rgba(100, 100, 100, 0)");
+        // Small crater rim
+        const smallRimGradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius);
+        smallRimGradient.addColorStop(0, "rgba(220, 220, 220, 0.7)");
+        smallRimGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
         
-        ctx.fillStyle = gradient;
+        ctx.fillStyle = smallRimGradient;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Small crater depression
+        const smallCraterGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.8);
+        smallCraterGradient.addColorStop(0, "rgba(50, 50, 50, 0.6)");
+        smallCraterGradient.addColorStop(1, "rgba(100, 100, 100, 0)");
+        
+        ctx.fillStyle = smallCraterGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Add subtle noise for texture variation
+      for (let i = 0; i < 10000; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 3;
+        const brightness = 100 + Math.random() * 100;
+        
+        ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -66,12 +116,12 @@ const MoonSurface = ({ onRightClick }: MoonSurfaceProps) => {
       <meshStandardMaterial 
         map={baseTexture}
         normalMap={normalMap}
-        normalScale={new THREE.Vector2(1.5, 1.5)}
+        normalScale={new THREE.Vector2(1.8, 1.8)}
         displacementMap={displacementMap}
-        displacementScale={0.3}
-        roughness={0.8}
-        metalness={0.2}
-        color="#c9c9c9"
+        displacementScale={0.4}
+        roughness={0.85}
+        metalness={0.1}
+        color="#e1e1e1"
         aoMapIntensity={1}
       />
     </mesh>
