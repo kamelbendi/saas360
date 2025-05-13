@@ -1,23 +1,13 @@
 import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { KeyboardControls } from "@react-three/drei";
 import { Loader } from "@react-three/drei";
 import { Toaster } from "sonner";
+import * as THREE from "three";
 import { useAudio } from "./lib/stores/useAudio";
 import LoadingScreen from "./components/UI/LoadingScreen";
 import FloatingTitle from "./components/UI/FloatingTitle";
 import LunarEnvironment from "./components/LunarEnvironment";
 import "@fontsource/inter";
-
-// Define control keys for navigation
-enum Controls {
-  forward = 'forward',
-  backward = 'backward',
-  left = 'left',
-  right = 'right',
-  up = 'up',
-  down = 'down',
-}
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -44,15 +34,7 @@ function App() {
     return () => clearTimeout(timer);
   }, [setBackgroundMusic]);
   
-  // Define key mappings
-  const keyMap = [
-    { name: Controls.forward, keys: ['ArrowUp', 'KeyW'] },
-    { name: Controls.backward, keys: ['ArrowDown', 'KeyS'] },
-    { name: Controls.left, keys: ['ArrowLeft', 'KeyA'] },
-    { name: Controls.right, keys: ['ArrowRight', 'KeyD'] },
-    { name: Controls.up, keys: ['KeyE'] },
-    { name: Controls.down, keys: ['KeyQ'] },
-  ];
+  // No need for custom THREE definition now that we imported it directly
   
   return (
     <>
@@ -60,26 +42,26 @@ function App() {
         <LoadingScreen />
       ) : (
         <>
-          <KeyboardControls map={keyMap}>
-            <Canvas 
-              shadows
-              camera={{ 
-                position: [0, 5, 15], 
-                fov: 60,
-                near: 0.1,
-                far: 1000
-              }}
-              gl={{ 
-                antialias: true,
-                powerPreference: "default"
-              }}
-            >
-              <Suspense fallback={null}>
-                <LunarEnvironment />
-              </Suspense>
-            </Canvas>
-            <Loader />
-          </KeyboardControls>
+          <Canvas 
+            shadows
+            camera={{ 
+              position: [0, 5, 15], 
+              fov: 60,
+              near: 0.1,
+              far: 1000
+            }}
+            gl={{ 
+              antialias: true,
+              powerPreference: "default",
+              toneMapping: THREE.ACESFilmicToneMapping,
+              toneMappingExposure: 1.0
+            }}
+          >
+            <Suspense fallback={null}>
+              <LunarEnvironment />
+            </Suspense>
+          </Canvas>
+          <Loader />
           <FloatingTitle />
           <Toaster position="top-right" richColors />
         </>

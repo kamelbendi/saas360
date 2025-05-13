@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, useKeyboardControls } from "@react-three/drei";
+import { OrbitControls, Stars } from "@react-three/drei";
 import * as THREE from "three";
 import { useLunarStore } from "../lib/stores/useLunarStore";
 import { useRightClickMenu } from "../hooks/useRightClickMenu";
@@ -9,18 +9,11 @@ import GroundSurface from "./MoonSurface";
 import SaasProduct from "./SaasProduct";
 import SpaceSkybox from "./SpaceSkybox";
 import FlyingStars from "./FlyingStars";
+import ShootingStars from "./ShootingStars";
+import AnimatedBackground from "./AnimatedBackground";
+import { createRandomAsteroids } from "./FloatingAsteroid";
 import SaasPlacementMenu from "./UI/SaasPlacementMenu";
 import ProductPopup from "./UI/ProductPopup";
-
-// Define Controls for keyboard navigation
-enum Controls {
-  forward = 'forward',
-  backward = 'backward',
-  left = 'left',
-  right = 'right',
-  up = 'up',
-  down = 'down',
-}
 
 // Main component for the lunar environment
 const LunarEnvironment = () => {
@@ -28,14 +21,6 @@ const LunarEnvironment = () => {
   const controls = useRef<any>();
   const { products, fetchProducts, addProduct } = useSupabaseProducts();
   const { selectedProduct, setSelectedProduct } = useLunarStore();
-  
-  // Set up controls
-  const forward = useKeyboardControls<Controls>(state => state.forward);
-  const backward = useKeyboardControls<Controls>(state => state.backward);
-  const left = useKeyboardControls<Controls>(state => state.left);
-  const right = useKeyboardControls<Controls>(state => state.right);
-  const up = useKeyboardControls<Controls>(state => state.up);
-  const down = useKeyboardControls<Controls>(state => state.down);
 
   const [cameraPosition, setCameraPosition] = useState(new THREE.Vector3(0, 5, 15));
   const [isPlacingProduct, setIsPlacingProduct] = useState(false);
@@ -126,6 +111,9 @@ const LunarEnvironment = () => {
       {/* Grey curved ground */}
       <GroundSurface onRightClick={handleRightClick} />
       
+      {/* Interactive animated background */}
+      <AnimatedBackground />
+      
       {/* Render all SaaS products */}
       {products.map((product) => (
         <SaasProduct 
@@ -138,6 +126,12 @@ const LunarEnvironment = () => {
       
       {/* Flying stars animations */}
       <FlyingStars />
+      
+      {/* Shooting stars for more dynamism */}
+      <ShootingStars />
+      
+      {/* Floating asteroids */}
+      {useMemo(() => createRandomAsteroids(12, 60, 30), [])}
       
       {/* Camera controls - limited to rotation only */}
       <OrbitControls 
