@@ -159,19 +159,20 @@ const Planet = ({
 
 // Main component for all celestial bodies
 const CelestialBodies = () => {
+  // Using color instead of texture since the earth_map.jpg isn't available
   return (
     <group>
-      {/* Earth (blue planet with cloud layer) */}
+      {/* Earth (more realistic blue planet) */}
       <Planet 
         position={[-100, 30, -150]} 
         size={10} 
         rotationSpeed={0.05} 
-        color="#1e88e5" 
+        color="#2979ff" 
         cloudLayer={true}
         cloudColor="#e1f5fe"
         glow={true}
-        glowColor="rgba(100, 149, 237, 0.5)"
-        glowSize={1.5}
+        glowColor="rgba(41, 121, 255, 0.25)"
+        glowSize={1.3}
       />
       
       {/* Mars (red planet) */}
@@ -208,12 +209,16 @@ const CelestialBodies = () => {
         glowSize={3}
       />
       
-      {/* Small blue moon */}
+      {/* Neptune (blue gas giant) - added for balance */}
       <Planet 
-        position={[-40, -10, -100]} 
-        size={3} 
-        rotationSpeed={0.07} 
-        color="#81d4fa" 
+        position={[80, 40, -200]} 
+        size={7} 
+        rotationSpeed={0.04} 
+        color="#1565c0" 
+        cloudLayer={true}
+        cloudColor="#bbdefb"
+        glow={true}
+        glowColor="rgba(21, 101, 192, 0.3)"
       />
       
       {/* Distant purple gas giant */}
@@ -226,6 +231,25 @@ const CelestialBodies = () => {
         cloudColor="#ce93d8"
         glow={true}
         glowColor="rgba(156, 39, 176, 0.2)"
+      />
+      
+      {/* Mercury - small rocky planet (added for balance) */}
+      <Planet 
+        position={[-150, -20, -120]} 
+        size={4} 
+        rotationSpeed={0.08} 
+        color="#795548" 
+      />
+      
+      {/* Uranus - cyan ice giant (added for balance) */}
+      <Planet 
+        position={[140, -30, -220]} 
+        size={9} 
+        rotationSpeed={0.025} 
+        color="#00acc1" 
+        rings={true}
+        ringColor="#b2ebf2"
+        ringSize={1.8}
       />
     </group>
   );
