@@ -403,3 +403,31 @@ canvas {
 .visit-link:hover {
   background-color: rgb(79, 82, 221);
 }
+
+/* SaaS Product Selected Badge */
+.selected-badge {
+  background-color: #2196f3;
+  color: white;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.6);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  animation: pulse-badge 2s infinite ease-in-out;
+  pointer-events: none;
+  white-space: nowrap;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
