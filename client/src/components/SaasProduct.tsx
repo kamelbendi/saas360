@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Text, Html, useCursor, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { useAudio } from "../lib/stores/useAudio";
+import { useSpring, animated } from "@react-spring/three";
 
 interface SaasProductProps {
   product: {
@@ -29,37 +30,63 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
   // Create position from the product data
   const position = new THREE.Vector3(...product.position);
   
-  // Create holographic effect texture
-  const hologramTexture = useMemo(() => {
+  // Create logo texture for the flag
+  const logoTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 128;
+    canvas.width = 256;
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      // Create a radial gradient for the hologram effect
-      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      gradient.addColorStop(0, 'rgba(79, 195, 247, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(33, 150, 243, 0.5)');
-      gradient.addColorStop(1, 'rgba(25, 118, 210, 0.0)');
+      // Background color
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 256, 128);
       
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 128, 128);
+      // Draw border
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, 252, 124);
       
-      // Add scan lines for hologram effect
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.lineWidth = 1;
+      // Draw company name
+      ctx.fillStyle = '#2196f3';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       
-      for (let i = 0; i < 128; i += 4) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(128, i);
-        ctx.stroke();
+      // Wrap text if too long
+      const name = product.name;
+      if (name.length > 12) {
+        const words = name.split(' ');
+        let line1 = '';
+        let line2 = '';
+        
+        if (words.length > 1) {
+          // Try to split at spaces
+          const middleIndex = Math.floor(words.length / 2);
+          line1 = words.slice(0, middleIndex).join(' ');
+          line2 = words.slice(middleIndex).join(' ');
+        } else {
+          // Split in the middle if it's a single word
+          const middle = Math.floor(name.length / 2);
+          line1 = name.slice(0, middle);
+          line2 = name.slice(middle);
+        }
+        
+        ctx.fillText(line1, 128, 50);
+        ctx.fillText(line2, 128, 80);
+      } else {
+        ctx.fillText(name, 128, 64);
       }
+      
+      // Create simple logo shape
+      ctx.beginPath();
+      ctx.arc(128, 40, 20, 0, Math.PI * 2);
+      ctx.fillStyle = hovered ? '#4fc3f7' : '#2196f3';
+      ctx.fill();
     }
     
     return new THREE.CanvasTexture(canvas);
-  }, []);
+  }, [product.name, hovered]);
   
   // Handle hover and click interactions
   const handlePointerOver = () => {
@@ -77,35 +104,71 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
     onClick();
   };
   
-  // Floating animation for the product marker
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
+  // Flag geometry with displacement for wave effect
+  const flagGeometry = useMemo(() => {
+    const geometry = new THREE.PlaneGeometry(1.5, 0.8, 20, 20);
+    return geometry;
+  }, []);
+
+  // Flag waving animation
+  const updateFlag = (geometry: THREE.BufferGeometry, time: number) => {
+    const positions = geometry.attributes.position as THREE.BufferAttribute;
     
-    if (floatingRef.current) {
-      floatingRef.current.position.y = Math.sin(time * 2) * 0.1 + 0.5;
-      floatingRef.current.rotation.y += 0.01;
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i);
+      const y = positions.getY(i);
       
-      // Pulse scale based on hover state
-      const targetScale = hovered ? 1.15 : 1.0;
-      floatingRef.current.scale.x = THREE.MathUtils.lerp(floatingRef.current.scale.x, targetScale, 0.1);
-      floatingRef.current.scale.y = THREE.MathUtils.lerp(floatingRef.current.scale.y, targetScale, 0.1);
-      floatingRef.current.scale.z = THREE.MathUtils.lerp(floatingRef.current.scale.z, targetScale, 0.1);
-    }
-    
-    if (baseRef.current) {
-      // Subtle breathing effect for the base
-      const breathingScale = 1 + Math.sin(time * 1.5) * 0.03;
-      baseRef.current.scale.set(breathingScale, 1, breathingScale);
-      
-      if (isSelected) {
-        // Rotate the base when selected
-        baseRef.current.rotation.y += 0.02;
+      // Only add wave effect to the flag part (not the pole)
+      if (x > -0.7) {
+        // Flag wave amplitude increases as we move right
+        const waveStrength = (x + 0.7) / 1.5 * 0.1;
+        const waveX = Math.sin(y * 5 + time * 2) * waveStrength;
+        const waveY = Math.sin(x * 5 + time * 1.5) * waveStrength * 0.2;
+        
+        // Apply wave deformation
+        positions.setXYZ(
+          i,
+          x + waveX,
+          y + waveY,
+          waveX * 2 // Z-axis displacement for 3D effect
+        );
       }
     }
     
+    positions.needsUpdate = true;
+  };
+  
+  // Flag pole waving animation (subtle)
+  const poleSpring = useSpring({
+    rotateX: isSelected ? 0.05 : 0,
+    rotateY: isSelected ? 0.1 : 0,
+    rotateZ: isSelected ? 0.05 : 0,
+    config: { mass: 1, tension: 100, friction: 20 }
+  });
+
+  // Animation loop for flag and pole
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    
+    // Update flag mesh wave effect
+    if (floatingRef.current && floatingRef.current.geometry) {
+      updateFlag(floatingRef.current.geometry, time);
+    }
+    
+    // Subtle breathing effect for the base
+    if (baseRef.current) {
+      const breathingScale = 1 + Math.sin(time * 1.5) * 0.02;
+      baseRef.current.scale.set(breathingScale, 1, breathingScale);
+      
+      if (isSelected) {
+        // Slowly rotate the base when selected
+        baseRef.current.rotation.y += 0.01;
+      }
+    }
+    
+    // Hover effect when selected
     if (groupRef.current && isSelected) {
-      // Add a slight hover effect when selected
-      groupRef.current.position.y = position.y + Math.sin(time) * 0.05;
+      groupRef.current.position.y = position.y + Math.sin(time) * 0.03;
     }
   });
   
@@ -130,81 +193,64 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       onPointerOut={handlePointerOut}
       onClick={handleClick}
     >
-      {/* Base platform with lights */}
+      {/* Flag pole base */}
       <mesh ref={baseRef} position={[0, 0.1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.5, 0.7, 0.2, 16]} />
+        <cylinderGeometry args={[0.2, 0.3, 0.2, 16]} />
         <meshStandardMaterial 
-          color={hovered ? "#4fc3f7" : "#2196f3"} 
-          roughness={0.3}
-          metalness={0.7}
-          emissiveIntensity={isSelected ? 0.5 : 0.1}
+          color={hovered ? "#a0a0a0" : "#808080"} 
+          roughness={0.7}
+          metalness={0.8}
+          emissiveIntensity={isSelected ? 0.3 : 0.1}
         />
       </mesh>
       
-      {/* Light ring around the base */}
-      <mesh position={[0, 0.21, 0]} rotation={[Math.PI/2, 0, 0]}>
-        <ringGeometry args={[0.5, 0.6, 32]} />
-        <meshBasicMaterial 
-          color={isSelected ? "#4fc3f7" : "#2196f3"} 
-          transparent
-          opacity={0.7}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-      
-      {/* Floating hologram-like object */}
-      <mesh ref={floatingRef} position={[0, 0.5, 0]} castShadow>
-        <dodecahedronGeometry args={[0.25, 1]} />
-        <meshPhysicalMaterial 
-          color={hovered ? "#4fc3f7" : "#2196f3"} 
-          roughness={0.1}
+      {/* Flag pole */}
+      <animated.mesh 
+        position={[0, 1.5, 0]} 
+        rotation-x={poleSpring.rotateX}
+        rotation-y={poleSpring.rotateY}
+        rotation-z={poleSpring.rotateZ}
+      >
+        <cylinderGeometry args={[0.03, 0.03, 3, 8]} />
+        <meshStandardMaterial 
+          color="#a0a0a0" 
+          roughness={0.5}
           metalness={0.9}
-          transparent
-          opacity={0.8}
-          clearcoat={1}
-          clearcoatRoughness={0.1}
-          transmission={0.2}
         />
-      </mesh>
-      
-      {/* Holographic ring around floating object */}
-      <mesh position={[0, 0.5, 0]} rotation={[Math.PI/2, 0, 0]}>
-        <ringGeometry args={[0.35, 0.4, 32]} />
-        <meshBasicMaterial 
-          color="#4fc3f7" 
-          transparent
-          opacity={0.6}
-          side={THREE.DoubleSide}
-          map={hologramTexture}
-        />
-      </mesh>
-      
-      {/* Product name label with glow */}
-      <group position={[0, 1.2, 0]}>
-        {/* Glow effect behind text */}
-        {(isSelected || hovered) && (
-          <sprite scale={[2, 0.5, 1]}>
-            <spriteMaterial 
-              transparent
-              opacity={0.4}
-              color="#4fc3f7"
-              blending={THREE.AdditiveBlending}
-            />
-          </sprite>
-        )}
         
-        <Text
-          fontSize={0.35}
-          color={isSelected ? "#ffffff" : (hovered ? "#e0f7fa" : "#b3e5fc")}
-          anchorX="center"
-          anchorY="middle"
-          maxWidth={2}
-          outlineWidth={isSelected ? 0.02 : 0}
-          outlineColor="#0277bd"
+        {/* Flag with logo */}
+        <mesh 
+          ref={floatingRef} 
+          position={[0.75, 0, 0]} 
+          rotation={[0, Math.PI/2, 0]}
+          geometry={flagGeometry}
         >
-          {product.name}
-        </Text>
-      </group>
+          <meshStandardMaterial 
+            map={logoTexture}
+            side={THREE.DoubleSide}
+            roughness={0.4}
+            metalness={0.2}
+          />
+        </mesh>
+      </animated.mesh>
+      
+      {/* Light on ground when selected */}
+      {isSelected && (
+        <pointLight
+          position={[0, 0.05, 0]}
+          distance={1.5}
+          intensity={1}
+          color="#ffffff"
+        />
+      )}
+      
+      {/* Selected marker (removed name label since it's on the flag) */}
+      {isSelected && (
+        <mesh position={[0, 3.4, 0]}>
+          <sphereGeometry args={[0.1, 16, 16]} />
+          <meshBasicMaterial color="#ffff00" />
+        </mesh>
+      )}
       
       {/* Glowing particles and lights */}
       <pointLight
