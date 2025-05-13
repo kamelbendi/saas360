@@ -54,6 +54,14 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       ctx.textBaseline = 'top';
       ctx.fillText('SAAS', 128, 10);
       
+      // Add underline below SAAS
+      ctx.beginPath();
+      ctx.moveTo(88, 28);
+      ctx.lineTo(168, 28);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
       // Draw logo (circle with first letter of company name)
       ctx.beginPath();
       ctx.arc(64, 64, 30, 0, Math.PI * 2);
@@ -97,14 +105,6 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       } else {
         ctx.fillText(name, 170, 64);
       }
-      
-      // Add underline below SAAS
-      ctx.beginPath();
-      ctx.moveTo(88, 28);
-      ctx.lineTo(168, 28);
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1;
-      ctx.stroke();
     }
     
     return new THREE.CanvasTexture(canvas);
@@ -126,104 +126,40 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
     onClick();
   };
   
-  // Flag geometry with displacement for wave effect
+  // Flag geometry - simple flat plane
   const flagGeometry = useMemo(() => {
-    const geometry = new THREE.PlaneGeometry(1.5, 0.8, 20, 20);
+    const geometry = new THREE.PlaneGeometry(1.5, 0.8, 4, 4);
     return geometry;
   }, []);
 
-  // Flag waving animation - more subtle and restrained
-  const updateFlag = (geometry: THREE.BufferGeometry, time: number) => {
-    const positions = geometry.attributes.position as THREE.BufferAttribute;
-    
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i);
-      const y = positions.getY(i);
-      
-      // Only add wave effect to the edge of the flag (not near the pole)
-      if (x > -0.3) {
-        // Flag wave amplitude increases as we move right but much more subtly
-        const waveStrength = (x + 0.3) / 1.5 * 0.04; // Reduced amplitude
-        
-        // Use slower time factor for more gentle motion
-        const waveX = Math.sin(y * 3 + time * 1.5) * waveStrength;
-        const waveY = Math.sin(x * 2 + time * 0.8) * waveStrength * 0.1;
-        
-        // Apply reduced wave deformation
-        positions.setXYZ(
-          i,
-          x + waveX,
-          y + waveY,
-          waveX * 0.5 // Reduced Z-axis displacement
-        );
-      }
-    }
-    
-    positions.needsUpdate = true;
-  };
-  
-  // Flag pole waving animation (subtle)
+  // No spring animation for the pole - completely stable
   const poleSpring = useSpring({
-    rotateX: isSelected ? 0.05 : 0,
-    rotateY: isSelected ? 0.1 : 0,
-    rotateZ: isSelected ? 0.05 : 0,
+    rotateX: 0,
+    rotateY: 0,
+    rotateZ: 0,
     config: { mass: 1, tension: 100, friction: 20 }
   });
-
-  // Animation loop for flag and pole
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-    
-    // Update flag mesh wave effect
-    if (floatingRef.current && floatingRef.current.geometry) {
-      updateFlag(floatingRef.current.geometry, time);
-    }
-    
-    // Subtle breathing effect for the base
-    if (baseRef.current) {
-      const breathingScale = 1 + Math.sin(time * 1.5) * 0.02;
-      baseRef.current.scale.set(breathingScale, 1, breathingScale);
-      
-      if (isSelected) {
-        // Slowly rotate the base when selected
-        baseRef.current.rotation.y += 0.01;
-      }
-    }
-    
-    // Hover effect when selected
-    if (groupRef.current && isSelected) {
-      groupRef.current.position.y = position.y + Math.sin(time) * 0.03;
-    }
-  });
   
-  // Highlight effect when selected
-  useEffect(() => {
-    if (baseRef.current && floatingRef.current) {
-      if (isSelected) {
-        (baseRef.current.material as THREE.MeshStandardMaterial).emissive.set('#4fc3f7');
-        (floatingRef.current.material as THREE.MeshStandardMaterial).emissive.set('#4fc3f7');
-      } else {
-        (baseRef.current.material as THREE.MeshStandardMaterial).emissive.set('#000000');
-        (floatingRef.current.material as THREE.MeshStandardMaterial).emissive.set('#000000');
-      }
-    }
-  }, [isSelected]);
-
   return (
-    <group
+    <group 
       ref={groupRef}
       position={position}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
       onClick={handleClick}
     >
-      {/* Flag pole base */}
-      <mesh ref={baseRef} position={[0, 0.1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.2, 0.3, 0.2, 16]} />
+      {/* Base */}
+      <mesh 
+        ref={baseRef}
+        position={[0, 0, 0]} 
+        rotation={[0, 0, 0]}
+      >
+        <cylinderGeometry args={[0.2, 0.3, 0.1, 16]} />
         <meshStandardMaterial 
-          color={hovered ? "#a0a0a0" : "#808080"} 
+          color={isSelected ? "#f5f5f5" : "#e0e0e0"} 
           roughness={0.7}
-          metalness={0.8}
+          metalness={0.3}
+          emissive={isSelected ? "#ffffff" : "#e0e0e0"}
           emissiveIntensity={isSelected ? 0.3 : 0.1}
         />
       </mesh>
@@ -248,8 +184,8 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
           position={[0.35, 0.7, 0]} 
           rotation={[0, Math.PI/2, 0]}
           scale={[0.7, 0.5, 0.7]}
-          geometry={flagGeometry}
         >
+          <planeGeometry args={[1.5, 0.8]} />
           <meshStandardMaterial 
             map={logoTexture}
             side={THREE.DoubleSide}
@@ -262,9 +198,9 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       {/* Light on ground when selected */}
       {isSelected && (
         <pointLight
-          position={[0, 0.05, 0]}
-          distance={1.5}
-          intensity={1}
+          position={[0, 0.1, 0]}
+          intensity={0.8}
+          distance={3}
           color="#ffffff"
         />
       )}
@@ -280,54 +216,10 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       {/* Glowing particles and lights */}
       <pointLight
         position={[0, 0.5, 0]}
-        distance={1.5}
-        intensity={hovered ? 3 : 2}
-        color="#4fc3f7"
+        intensity={0.2}
+        distance={1}
+        color={isSelected ? "#ffffff" : "#4fc3f7"}
       />
-      
-      {/* Additional ambient light for selected items */}
-      {isSelected && (
-        <pointLight
-          position={[0, 0.1, 0]}
-          distance={3}
-          intensity={1}
-          color="#0277bd"
-        />
-      )}
-      
-      {/* Particle system for selected items */}
-      {isSelected && (
-        <points>
-          <bufferGeometry>
-            <float32BufferAttribute 
-              attach="attributes-position" 
-              array={new Float32Array(Array(30).fill(0).flatMap(() => [
-                (Math.random() - 0.5) * 1.5,
-                (Math.random()) * 1.5,
-                (Math.random() - 0.5) * 1.5
-              ]))} 
-              count={30} 
-              itemSize={3} 
-            />
-          </bufferGeometry>
-          <pointsMaterial 
-            size={0.05} 
-            color="#4fc3f7" 
-            transparent 
-            opacity={0.8}
-            blending={THREE.AdditiveBlending}
-          />
-        </points>
-      )}
-      
-      {/* Selected indicator */}
-      {isSelected && (
-        <Html position={[0, -0.5, 0]} center>
-          <div className="selected-badge">
-            Active Selection
-          </div>
-        </Html>
-      )}
     </group>
   );
 };
