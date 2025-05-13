@@ -7,8 +7,6 @@ import ShootingStars from "./ShootingStars";
 
 const SpaceSkybox = () => {
   const sphereRef = useRef<THREE.Mesh>(null);
-  const earthRef = useRef<THREE.Mesh>(null);
-  const earthCloudsRef = useRef<THREE.Mesh>(null);
   const starFieldRef = useRef<THREE.Points>(null);
   
   // Using sky texture for the skybox
@@ -179,18 +177,10 @@ const SpaceSkybox = () => {
     return { starPositions: positions, starSizes: sizes, starColors: colors };
   }, []);
   
-  // Animation for Earth and stars
+  // Animation for skybox and stars
   useFrame((state) => {
     if (sphereRef.current) {
       sphereRef.current.rotation.y += 0.0001;
-    }
-    
-    if (earthRef.current) {
-      earthRef.current.rotation.y += 0.0003;
-    }
-    
-    if (earthCloudsRef.current) {
-      earthCloudsRef.current.rotation.y += 0.0004; // Clouds move slightly faster
     }
     
     if (starFieldRef.current) {
@@ -210,40 +200,7 @@ const SpaceSkybox = () => {
         />
       </mesh>
       
-      {/* Earth in the distance */}
-      <group position={[-180, 60, -250]}>
-        {/* Earth base */}
-        <mesh ref={earthRef}>
-          <sphereGeometry args={[30, 64, 32]} />
-          <meshPhongMaterial 
-            map={earthBaseTexture}
-            shininess={5}
-            specular={new THREE.Color("#333")}
-          />
-        </mesh>
-        
-        {/* Earth clouds layer */}
-        <mesh ref={earthCloudsRef}>
-          <sphereGeometry args={[30.5, 64, 32]} />
-          <meshPhongMaterial 
-            map={cloudTexture}
-            transparent={true}
-            opacity={0.7}
-            depthWrite={false}
-          />
-        </mesh>
-        
-        {/* Atmosphere glow */}
-        <mesh>
-          <sphereGeometry args={[32, 32, 16]} />
-          <meshBasicMaterial 
-            color="#4fc3f7"
-            transparent={true}
-            opacity={0.1}
-            side={THREE.BackSide}
-          />
-        </mesh>
-      </group>
+      {/* Removed duplicate Earth - using only the Earth in CelestialBodies.tsx */}
       
       {/* Enhanced star field */}
       <points ref={starFieldRef}>
