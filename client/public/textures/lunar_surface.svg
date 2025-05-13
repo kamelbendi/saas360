@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" />
+    </filter>
+    <filter id="displace" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" result="turbulence" />
+      <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="20" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff" filter="url(#noise)" />
+  <circle cx="300" cy="400" r="50" fill="#d0d0d0" filter="url(#displace)" />
+  <circle cx="600" cy="300" r="70" fill="#c8c8c8" filter="url(#displace)" />
+  <circle cx="450" cy="700" r="100" fill="#d8d8d8" filter="url(#displace)" />
+  <circle cx="750" cy="600" r="80" fill="#c0c0c0" filter="url(#displace)" />
+  <circle cx="200" cy="200" r="30" fill="#e0e0e0" filter="url(#displace)" />
+  <circle cx="800" cy="800" r="60" fill="#c0c0c0" filter="url(#displace)" />
+</svg>

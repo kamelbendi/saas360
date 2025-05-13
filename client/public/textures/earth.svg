@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="earth" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#2196f3" />
+      <stop offset="70%" stop-color="#1565c0" />
+      <stop offset="100%" stop-color="#0d47a1" />
+    </radialGradient>
+    <filter id="clouds" x="-50%" y="-50%" width="200%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.3 0" />
+      <feComponentTransfer>
+        <feFuncR type="discrete" tableValues="1 1" />
+        <feFuncG type="discrete" tableValues="1 1" />
+        <feFuncB type="discrete" tableValues="1 1" />
+      </feComponentTransfer>
+    </filter>
+    <filter id="landmass" x="-50%" y="-50%" width="200%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="5" stitchTiles="stitch" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" />
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.2 0.2 0 0" />
+      </feComponentTransfer>
+      <feComposite operator="in" in2="SourceGraphic" />
+    </filter>
+  </defs>
+  <circle cx="256" cy="256" r="256" fill="url(#earth)" />
+  <circle cx="256" cy="256" r="256" fill="#4caf50" filter="url(#landmass)" />
+  <circle cx="256" cy="256" r="256" fill="#ffffff" filter="url(#clouds)" />
+</svg>
