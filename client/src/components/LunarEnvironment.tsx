@@ -159,14 +159,7 @@ const LunarEnvironment = () => {
         target={[0, 0, 0]}
       />
       
-      {/* UI Elements */}
-      {contextMenu.visible && (
-        <SaasPlacementMenu 
-          position={contextMenu.position}
-          onClose={hideContextMenu}
-          onAddProduct={() => setIsPlacingProduct(true)}
-        />
-      )}
+      {/* No UI Elements inside the canvas */}
       
       {isPlacingProduct && placementPosition && (
         <div className="lunar-ui">
