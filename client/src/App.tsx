@@ -5,8 +5,8 @@ import { Loader } from "@react-three/drei";
 import { Toaster } from "sonner";
 import { useAudio } from "./lib/stores/useAudio";
 import LoadingScreen from "./components/UI/LoadingScreen";
+import FloatingTitle from "./components/UI/FloatingTitle";
 import LunarEnvironment from "./components/LunarEnvironment";
-import ControlsHelp from "./components/UI/ControlsHelp";
 import "@fontsource/inter";
 
 // Define control keys for navigation
@@ -80,7 +80,7 @@ function App() {
             </Canvas>
             <Loader />
           </KeyboardControls>
-          <ControlsHelp />
+          <FloatingTitle />
           <Toaster position="top-right" richColors />
         </>
       )}

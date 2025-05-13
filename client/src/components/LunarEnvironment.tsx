@@ -8,6 +8,7 @@ import { useSupabaseProducts } from "../hooks/useSupabaseProducts";
 import GroundSurface from "./MoonSurface";
 import SaasProduct from "./SaasProduct";
 import SpaceSkybox from "./SpaceSkybox";
+import FlyingStars from "./FlyingStars";
 import SaasPlacementMenu from "./UI/SaasPlacementMenu";
 import ProductPopup from "./UI/ProductPopup";
 
@@ -135,14 +136,8 @@ const LunarEnvironment = () => {
         />
       ))}
       
-      {/* Particle stars */}
-      <Stars 
-        radius={100} 
-        depth={50} 
-        count={5000} 
-        factor={4} 
-        saturation={0} 
-      />
+      {/* Flying stars animations */}
+      <FlyingStars />
       
       {/* Camera controls - limited to rotation only */}
       <OrbitControls 
