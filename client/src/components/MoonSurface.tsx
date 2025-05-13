@@ -211,7 +211,10 @@ const GroundSurface = ({ onRightClick }: GroundSurfaceProps) => {
         ref={meshRef}
         position={[0, -50, 0]} 
         receiveShadow
-        onContextMenu={onRightClick}
+        onContextMenu={(e) => {
+          e.stopPropagation();
+          onRightClick(e);
+        }}
       >
         <sphereGeometry args={[50, 128, 128, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial 

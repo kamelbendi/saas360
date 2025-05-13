@@ -12,15 +12,27 @@ export const useRightClickMenu = () => {
   });
   
   // Show the context menu
-  const showContextMenu = useCallback((event: MouseEvent) => {
+  const showContextMenu = useCallback((event: MouseEvent | React.MouseEvent) => {
+    if (!event) {
+      console.error('No event provided to showContextMenu');
+      return;
+    }
+    
+    // Prevent default context menu
     event.preventDefault();
+    
+    // Get coordinates (may be in different places depending on event type)
+    let x = 0, y = 0;
+    
+    // Standard browser event
+    if ('clientX' in event && 'clientY' in event) {
+      x = event.clientX;
+      y = event.clientY;
+    }
     
     setContextMenu({
       visible: true,
-      position: {
-        x: event.clientX,
-        y: event.clientY
-      }
+      position: { x, y }
     });
   }, []);
   

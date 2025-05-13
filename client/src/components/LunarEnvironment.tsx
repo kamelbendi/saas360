@@ -36,10 +36,21 @@ const LunarEnvironment = () => {
 
   // Handle right click on the moon surface
   const handleRightClick = (event: any) => {
-    if (!event.intersections.length) return;
+    // Make sure we have event and intersections
+    if (!event || !event.intersections || !event.intersections.length) return;
+    
+    // Get the intersection point and original event
     const intersect = event.intersections[0];
+    const originalEvent = event.nativeEvent || event.originalEvent;
+    
+    if (!originalEvent) {
+      console.error('No original event found in right-click handler');
+      return;
+    }
+    
+    // Set the placement position and show context menu
     setPlacementPosition(intersect.point);
-    showContextMenu(event.originalEvent);
+    showContextMenu(originalEvent);
   };
 
   // Add a product at the current placement position
