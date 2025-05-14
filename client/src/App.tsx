@@ -12,6 +12,7 @@ import LunarEnvironment from "./components/LunarEnvironment";
 import SaasPlacementMenu from "./components/UI/SaasPlacementMenu";
 import ProductPopup from "./components/UI/ProductPopup";
 import ProductPopupHtml from "./components/UI/ProductPopupHtml";
+import { Confetti } from "./components/Confetti";
 import "@fontsource/inter";
 
 function App() {
