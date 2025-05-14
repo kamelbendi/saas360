@@ -7,7 +7,8 @@ export interface SaasProduct {
   name: string;
   description: string;
   url: string;
-  founder_twitter?: string;
+  founder_twitter?: string; // For backward compatibility 
+  author?: string;          // New field name
   position: number[];
   created_at?: string;
 }

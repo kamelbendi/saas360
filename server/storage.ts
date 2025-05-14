@@ -106,13 +106,23 @@ export class MemStorage implements IStorage {
     const id = this.flagCurrentId++;
     const now = new Date();
     
-    // Ensure author has a default value to match the schema
-    const flagWithDefaults = {
-      ...insertFlag,
-      author: insertFlag.author || ""
+    // Create a clean flag object with all the required properties
+    // This avoids any typing issues by not spreading potentially incompatible objects
+    const flag: Flag = {
+      id,
+      name: insertFlag.name,
+      description: insertFlag.description,
+      url: insertFlag.url,
+      author: insertFlag.author || "",
+      position: (Array.isArray(insertFlag.position) ? 
+                  // Convert each element to a number and ensure it's an array of numbers
+                  [Number(insertFlag.position[0] || 0), 
+                   Number(insertFlag.position[1] || 0), 
+                   Number(insertFlag.position[2] || 0)] 
+                 : [0, 0, 0]),
+      created_at: now
     };
     
-    const flag: Flag = { ...flagWithDefaults, id, created_at: now };
     this.flags.set(id, flag);
     return flag;
   }
@@ -134,10 +144,14 @@ export class MemStorage implements IStorage {
   }
   
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    // Map founder_twitter to author if needed
+    // Create a clean flag object with all the required properties
     const insertFlag: InsertFlag = {
-      ...insertProduct,
-      author: (insertProduct as any).founder_twitter || insertProduct.author || ""
+      name: insertProduct.name,
+      description: insertProduct.description,
+      url: insertProduct.url,
+      // Handle founder_twitter correctly
+      author: (insertProduct as any).founder_twitter || (insertProduct as any).author || "",
+      position: (insertProduct as any).position || [0, 0, 0],
     };
     return this.createFlag(insertFlag);
   }

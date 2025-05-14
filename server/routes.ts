@@ -3,7 +3,80 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // API routes for products
+  // API routes for flags
+  app.get("/api/flags", async (req, res) => {
+    try {
+      const flags = await storage.getAllFlags();
+      res.json(flags);
+    } catch (error) {
+      console.error("Error fetching flags:", error);
+      res.status(500).json({ message: "Failed to fetch flags" });
+    }
+  });
+
+  app.get("/api/flags/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid flag ID" });
+      }
+      
+      const flag = await storage.getFlag(id);
+      if (!flag) {
+        return res.status(404).json({ message: "Flag not found" });
+      }
+      
+      res.json(flag);
+    } catch (error) {
+      console.error("Error fetching flag:", error);
+      res.status(500).json({ message: "Failed to fetch flag" });
+    }
+  });
+
+  app.post("/api/flags", async (req, res) => {
+    try {
+      const { name, description, url, author, position } = req.body;
+      
+      // Basic validation
+      if (!name || !description || !url || !position) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const newFlag = await storage.createFlag({
+        name,
+        description,
+        url,
+        author: author || "",
+        position
+      });
+      
+      res.status(201).json(newFlag);
+    } catch (error) {
+      console.error("Error creating flag:", error);
+      res.status(500).json({ message: "Failed to create flag" });
+    }
+  });
+
+  app.delete("/api/flags/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid flag ID" });
+      }
+      
+      const deleted = await storage.deleteFlag(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Flag not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting flag:", error);
+      res.status(500).json({ message: "Failed to delete flag" });
+    }
+  });
+  
+  // Keep original product API for backward compatibility
   app.get("/api/products", async (req, res) => {
     try {
       const products = await storage.getAllProducts();
@@ -35,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", async (req, res) => {
     try {
-      const { name, description, url, position } = req.body;
+      const { name, description, url, founder_twitter, position } = req.body;
       
       // Basic validation
       if (!name || !description || !url || !position) {
@@ -46,6 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name,
         description,
         url,
+        author: founder_twitter || "",
         position
       });
       
