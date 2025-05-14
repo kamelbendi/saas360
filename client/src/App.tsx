@@ -117,14 +117,17 @@ function App() {
             <SaasPlacementMenu 
               position={contextMenuPosition}
               onClose={hideContextMenu}
-              onAddProduct={() => setIsPlacingProduct(true)}
+              onAddProduct={() => {
+                setIsPlacingProduct(true);
+                setSelectedProduct(null);
+              }}
             />
           )}
           
           {/* Product Form */}
           {isPlacingProduct && placementPosition && (
             <div className="lunar-ui">
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 2000 }}>
                 <div className="bg-card p-6 rounded-lg w-full max-w-md">
                   <h2 className="text-xl font-bold mb-4">Add SaaS Product</h2>
                   <form onSubmit={(e) => {
