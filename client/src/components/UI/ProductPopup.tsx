@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Html } from "@react-three/drei";
-import { ExternalLink, X } from "lucide-react";
+import { ExternalLink, X, Trash2 } from "lucide-react";
+import { useSupabaseProducts } from "../../hooks/useSupabaseProducts";
 
 interface ProductPopupProps {
   product: {
@@ -11,11 +12,14 @@ interface ProductPopupProps {
   };
   position: [number, number, number];
   onClose: () => void;
+  onDelete?: () => void;
 }
 
 const ProductPopup = ({ product, position, onClose }: ProductPopupProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+  const { deleteProduct } = useSupabaseProducts();
   
   // Animation effect on mount
   useEffect(() => {
@@ -33,6 +37,20 @@ const ProductPopup = ({ product, position, onClose }: ProductPopupProps) => {
     setTimeout(() => {
       onClose();
     }, 300); // Match animation duration
+  };
+  
+  // Handle delete product
+  const handleDelete = async () => {
+    if (isDeleting) return; // Prevent multiple clicks
+    
+    setIsDeleting(true);
+    try {
+      await deleteProduct(product.id);
+      handleClose();
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+      setIsDeleting(false);
+    }
   };
   
   // Handle click outside to close
@@ -75,6 +93,16 @@ const ProductPopup = ({ product, position, onClose }: ProductPopupProps) => {
         </div>
         
         <div className="popup-footer">
+          <button
+            onClick={handleDelete}
+            className="delete-btn"
+            disabled={isDeleting}
+            aria-label="Delete product"
+          >
+            <Trash2 size={14} />
+            <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+          </button>
+          
           <a 
             href={product.url} 
             target="_blank" 
