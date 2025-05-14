@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm";
 // Initialize database connection
 const connectionString = process.env.DATABASE_URL as string;
 // For connection pooling with Postgres.js
-const queryClient = postgres(connectionString);
+const queryClient = postgres(connectionString, { max: 10 });
 export const db = drizzle(queryClient);
 
 // Extended storage interface with flag methods
@@ -33,14 +33,14 @@ export interface IStorage {
   deleteProduct(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
+export class DbStorage implements IStorage {
   private users: Map<number, User>;
   private userCurrentId: number;
 
   constructor() {
     this.users = new Map();
     this.userCurrentId = 1;
-    // No more in-memory storage for flags - we use the database directly
+    // User data still stored in memory, flags in database
   }
 
   // User methods (from original)
@@ -149,4 +149,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DbStorage();
