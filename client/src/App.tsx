@@ -133,7 +133,8 @@ function App() {
                     handleAddProduct({
                       name: formData.get('name') as string,
                       description: formData.get('description') as string,
-                      url: formData.get('url') as string
+                      url: formData.get('url') as string,
+                      founder_twitter: formData.get('founder_twitter') as string
                     });
                   }}>
                     <div className="space-y-4">
@@ -163,6 +164,28 @@ function App() {
                           className="w-full p-2 bg-secondary rounded border border-border" 
                           required 
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          <span className="flex items-center gap-1">
+                            Founder's Twitter/X Handle
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+                            </svg>
+                          </span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-2 text-muted-foreground">@</span>
+                          <input 
+                            type="text" 
+                            name="founder_twitter" 
+                            className="w-full p-2 pl-7 bg-secondary rounded border border-border" 
+                            placeholder="username (without @)" 
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Optional: Will display founder's profile image in product details
+                        </p>
                       </div>
                       <div className="flex justify-end space-x-2 pt-2">
                         <button 

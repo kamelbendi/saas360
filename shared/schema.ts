@@ -36,5 +36,11 @@ export const insertProductSchema = createInsertSchema(products).pick({
   position: true,
 });
 
+// Add validation/transformation to ensure founder_twitter is always a string
+export const insertProductSchema2 = insertProductSchema.transform((data) => ({
+  ...data,
+  founder_twitter: data.founder_twitter || ""
+}));
+
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;

@@ -90,7 +90,14 @@ export class MemStorage implements IStorage {
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
     const id = this.productCurrentId++;
     const now = new Date();
-    const product: Product = { ...insertProduct, id, created_at: now };
+    
+    // Ensure founder_twitter has a default value to match the schema
+    const productWithDefaults = {
+      ...insertProduct,
+      founder_twitter: insertProduct.founder_twitter || ""
+    };
+    
+    const product: Product = { ...productWithDefaults, id, created_at: now };
     this.products.set(id, product);
     return product;
   }
