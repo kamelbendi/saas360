@@ -1,385 +1,164 @@
-import { useRef, useMemo, useState, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
-import { useTexture } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 
 interface PlanetProps {
   position: [number, number, number];
   size: number;
   rotationSpeed: number;
-  orbitSpeed?: number;
-  orbitRadius?: number;
-  orbitCenterX?: number;
-  orbitCenterZ?: number;
-  orbitTilt?: number;
-  axialTilt?: number;
   color: string;
   emissive?: boolean;
   emissiveIntensity?: number;
   rings?: boolean;
   ringColor?: string;
   ringSize?: number;
-  ringOpacity?: number;
-  ringRotation?: number;
   cloudLayer?: boolean;
   cloudColor?: string;
-  cloudSpeed?: number;
-  atmosphere?: boolean;
-  atmosphereColor?: string;
-  atmosphereSize?: number;
   glow?: boolean;
   glowColor?: string;
   glowSize?: number;
-  moons?: MoonProps[];
-  hasOcean?: boolean;
-  oceanColor?: string;
-  highlightOnHover?: boolean;
 }
 
-interface MoonProps {
-  size: number;
-  distance: number;
-  speed: number;
-  color: string;
-  tilt?: number;
-}
-
-// More advanced planet component with realistic features
+// Component to create a planet with custom properties
 const Planet = ({ 
-  position: initialPosition, 
+  position, 
   size, 
   rotationSpeed, 
-  orbitSpeed = 0,
-  orbitRadius = 0,
-  orbitCenterX = 0,
-  orbitCenterZ = 0,
-  orbitTilt = 0,
-  axialTilt = 0,
   color,
   emissive = false,
-  emissiveIntensity = 0.5,
+  emissiveIntensity = 0.2,
   rings = false,
-  ringColor = '#ffffff',
-  ringSize = 2,
-  ringOpacity = 0.7,
-  ringRotation = 0,
+  ringColor = '#f0f0f0',
+  ringSize = 1.2,
   cloudLayer = false,
   cloudColor = '#ffffff',
-  cloudSpeed = 0.3,
-  atmosphere = false,
-  atmosphereColor = 'rgba(255, 255, 255, 0.2)',
-  atmosphereSize = 1.15,
   glow = false,
-  glowColor = 'rgba(255, 255, 255, 0.2)',
-  glowSize = 2,
-  moons = [],
-  hasOcean = false,
-  oceanColor = '#2196f3',
-  highlightOnHover = false
+  glowColor = '#ffffff',
+  glowSize = 1.2,
 }: PlanetProps) => {
-  const groupRef = useRef<THREE.Group>(null);
   const planetRef = useRef<THREE.Mesh>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
   const ringsRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Sprite>(null);
-  const oceanRef = useRef<THREE.Mesh>(null);
-  const atmosphereRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-  const [position, setPosition] = useState<[number, number, number]>(initialPosition);
-  const { clock } = useThree();
-  
-  // Create a default texture for the planet
-  function createDefaultTexture(color: string): THREE.Texture {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 256;
-    const context = canvas.getContext('2d')!;
-    
-    // Create a gradient background
-    const gradient = context.createLinearGradient(0, 0, 0, 256);
-    const mainColor = new THREE.Color(color);
-    const darkerColor = new THREE.Color(color).multiplyScalar(0.5);
-    const lighterColor = new THREE.Color(color).multiplyScalar(1.2);
-    
-    gradient.addColorStop(0, lighterColor.getStyle());
-    gradient.addColorStop(0.5, mainColor.getStyle());
-    gradient.addColorStop(1, darkerColor.getStyle());
-    
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 512, 256);
-    
-    // Add some noise/variation for texture
-    for (let i = 0; i < 5000; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 256;
-      const radius = Math.random() * 1.5;
-      const alpha = Math.random() * 0.2;
-      
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-      context.fill();
+
+  // Animate rotation
+  useFrame((_, delta) => {
+    if (planetRef.current) {
+      planetRef.current.rotation.y += rotationSpeed * delta;
     }
     
-    // Add band patterns (like gas giants)
-    for (let i = 0; i < 6; i++) {
-      const y = i * 40 + Math.random() * 20;
-      const height = 10 + Math.random() * 10;
-      
-      context.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.1})`;
-      context.fillRect(0, y, 512, height);
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += rotationSpeed * 1.5 * delta;
     }
     
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    
-    return texture;
-  }
-  
-  // Create cloud texture
-  function createCloudTexture(cloudColor: string): THREE.Texture {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 256;
-    const context = canvas.getContext('2d')!;
-    
-    context.fillStyle = 'rgba(0, 0, 0, 0)';
-    context.fillRect(0, 0, 512, 256);
-    
-    // Create cloud-like patterns
-    const color = new THREE.Color(cloudColor);
-    const r = Math.floor(color.r * 255);
-    const g = Math.floor(color.g * 255);
-    const b = Math.floor(color.b * 255);
-    
-    for (let i = 0; i < 100; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 256;
-      const radius = 10 + Math.random() * 40;
-      const alpha = 0.1 + Math.random() * 0.4;
-      
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
-      context.fill();
+    if (ringsRef.current) {
+      ringsRef.current.rotation.x = Math.PI / 4; // Tilt rings
     }
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    
-    return texture;
-  }
-  
-  // Helper to create glow texture
-  function createGlowTexture(color: string): HTMLCanvasElement {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
-    const context = canvas.getContext('2d')!;
-    
-    const gradient = context.createRadialGradient(
-      128, 128, 0, 128, 128, 128
-    );
-    gradient.addColorStop(0, color.replace(')', ', 1.0)').replace('rgba', 'rgba').replace('rgb', 'rgba'));
-    gradient.addColorStop(0.4, color.replace(')', ', 0.6)').replace('rgba', 'rgba').replace('rgb', 'rgba'));
-    gradient.addColorStop(0.7, color.replace(')', ', 0.3)').replace('rgba', 'rgba').replace('rgb', 'rgba'));
-    gradient.addColorStop(1, color.replace(')', ', 0)').replace('rgba', 'rgba').replace('rgb', 'rgba'));
-    
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 256, 256);
-    
-    return canvas;
-  }
-  
-  // Generate planet textures
-  const planetTexture = useMemo(() => createDefaultTexture(color), [color]);
-  const cloudTexture = useMemo(() => cloudLayer ? createCloudTexture(cloudColor) : null, [cloudLayer, cloudColor]);
-  
-  // Create materials
+  });
+
+  // Create planet material
   const planetMaterial = useMemo(() => {
-    const material = new THREE.MeshStandardMaterial({
+    return new THREE.MeshStandardMaterial({
       color: new THREE.Color(color),
       roughness: 0.7,
-      metalness: 0.2,
-      map: planetTexture,
+      metalness: 0.1,
       emissive: emissive ? new THREE.Color(color) : new THREE.Color('#000000'),
-      emissiveIntensity: emissive ? emissiveIntensity : 0
+      emissiveIntensity: emissiveIntensity,
     });
-    
-    if (highlightOnHover) {
-      material.emissive = hovered 
-        ? new THREE.Color(color).multiplyScalar(1.5) 
-        : (emissive ? new THREE.Color(color) : new THREE.Color('#000000'));
-      material.emissiveIntensity = hovered ? 0.3 : (emissive ? emissiveIntensity : 0);
-    }
-    
-    return material;
-  }, [color, planetTexture, emissive, emissiveIntensity, hovered, highlightOnHover]);
-  
-  // Cloud material if needed
+  }, [color, emissive, emissiveIntensity]);
+
+  // Create cloud material if needed
   const cloudMaterial = useMemo(() => {
     if (!cloudLayer) return null;
     
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color(cloudColor),
-      map: cloudTexture,
       transparent: true,
-      opacity: 0.7,
-      roughness: 1.0,
-      metalness: 0,
-      side: THREE.FrontSide,
-      blending: THREE.AdditiveBlending
+      opacity: 0.5,
+      roughness: 0.8,
+      metalness: 0.0,
     });
-  }, [cloudLayer, cloudColor, cloudTexture]);
-  
-  // Ring material if needed
+  }, [cloudLayer, cloudColor]);
+
+  // Create ring material if needed
   const ringMaterial = useMemo(() => {
     if (!rings) return null;
     
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color(ringColor),
+      transparent: true,
+      opacity: 0.7,
+      roughness: 0.6,
+      metalness: 0.3,
       side: THREE.DoubleSide,
-      transparent: true,
-      opacity: ringOpacity,
-      roughness: 0.9,
-      metalness: 0.1,
-      emissive: hovered && highlightOnHover ? new THREE.Color(ringColor) : new THREE.Color('#000000'),
-      emissiveIntensity: hovered && highlightOnHover ? 0.2 : 0
     });
-  }, [rings, ringColor, ringOpacity, hovered, highlightOnHover]);
-  
-  // Ocean material if needed
-  const oceanMaterial = useMemo(() => {
-    if (!hasOcean) return null;
-    
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(oceanColor),
-      transparent: true,
-      opacity: 0.8,
-      roughness: 0.0,
-      metalness: 0.9,
-      side: THREE.FrontSide,
-      emissive: hovered && highlightOnHover ? new THREE.Color(oceanColor) : new THREE.Color('#000000'),
-      emissiveIntensity: hovered && highlightOnHover ? 0.2 : 0
-    });
-  }, [hasOcean, oceanColor, hovered, highlightOnHover]);
-  
-  // Atmosphere material if needed
-  const atmosphereMaterial = useMemo(() => {
-    if (!atmosphere) return null;
-    
-    return new THREE.MeshBasicMaterial({
-      color: new THREE.Color(atmosphereColor.replace('rgba', 'rgb').replace(/,\s*[\d.]+\)/, ')')),
-      transparent: true,
-      opacity: 0.2,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending
-    });
-  }, [atmosphere, atmosphereColor]);
-  
-  // Glow material if needed
+  }, [rings, ringColor]);
+
+  // Create glow sprite material if needed
   const glowMaterial = useMemo(() => {
     if (!glow) return null;
     
-    const spriteMaterial = new THREE.SpriteMaterial({
-      map: new THREE.CanvasTexture(createGlowTexture(glowColor)),
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
+    // Create a radial gradient for the glow
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
     
-    return spriteMaterial;
-  }, [glow, glowColor]);
-  
-  // Calculate orbit position
-  useEffect(() => {
-    if (orbitRadius > 0) {
-      // Initial position is now based on the orbit
-      const angle = Math.random() * Math.PI * 2;
-      const x = orbitCenterX + Math.cos(angle) * orbitRadius;
-      const z = orbitCenterZ + Math.sin(angle) * orbitRadius * Math.cos(orbitTilt * Math.PI / 180);
-      const y = initialPosition[1] + Math.sin(angle) * orbitRadius * Math.sin(orbitTilt * Math.PI / 180);
+    if (ctx) {
+      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
       
-      setPosition([x, y, z]);
-    }
-  }, [orbitRadius, orbitCenterX, orbitCenterZ, orbitTilt, initialPosition]);
-  
-  // Animate rotation and orbit
-  useFrame((_, delta) => {
-    // Update orbit position if needed
-    if (orbitRadius > 0 && orbitSpeed > 0) {
-      const time = clock.getElapsedTime();
-      const angle = time * orbitSpeed;
+      // Parse color to ensure valid format
+      let r = 255, g = 255, b = 255; // Default white
       
-      const x = orbitCenterX + Math.cos(angle) * orbitRadius;
-      const z = orbitCenterZ + Math.sin(angle) * orbitRadius * Math.cos(orbitTilt * Math.PI / 180);
-      const y = initialPosition[1] + Math.sin(angle) * orbitRadius * Math.sin(orbitTilt * Math.PI / 180);
-      
-      setPosition([x, y, z]);
-    }
-    
-    // Rotate planet on its axis
-    if (planetRef.current) {
-      // Apply axial tilt
-      if (axialTilt !== 0 && planetRef.current.rotation.x === 0) {
-        planetRef.current.rotation.x = axialTilt * Math.PI / 180;
+      try {
+        if (glowColor.startsWith('#')) {
+          // Hex color
+          const hex = glowColor.substring(1);
+          r = parseInt(hex.substring(0, 2), 16) || 255;
+          g = parseInt(hex.substring(2, 4), 16) || 255;
+          b = parseInt(hex.substring(4, 6), 16) || 255;
+        } else if (glowColor.startsWith('rgb')) {
+          // RGB or RGBA color
+          const parts = glowColor.match(/\d+/g);
+          if (parts && parts.length >= 3) {
+            r = parseInt(parts[0]) || 255;
+            g = parseInt(parts[1]) || 255;
+            b = parseInt(parts[2]) || 255;
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing color:", e);
+        // Use default values if parsing fails
       }
       
-      // Apply rotation
-      planetRef.current.rotation.y += rotationSpeed * delta;
-    }
-    
-    // Rotate cloud layer slightly faster than the planet
-    if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += rotationSpeed * (1 + cloudSpeed) * delta;
-    }
-    
-    // Apply static ring rotation
-    if (ringsRef.current && ringRotation !== 0 && ringsRef.current.rotation.x === 0) {
-      ringsRef.current.rotation.x = ringRotation * Math.PI / 180;
-    }
-    
-    // Apply very small random motion to glow for subtle animation
-    if (glowRef.current) {
-      glowRef.current.position.x = Math.sin(clock.getElapsedTime() * 0.5) * 0.05;
-      glowRef.current.position.y = Math.cos(clock.getElapsedTime() * 0.5) * 0.05;
-    }
-  });
-  
-  return (
-    <group ref={groupRef} position={position}>
-      {/* Atmosphere layer if enabled */}
-      {atmosphere && atmosphereMaterial && (
-        <mesh ref={atmosphereRef}>
-          <sphereGeometry args={[size * atmosphereSize, 32, 32]} />
-          <primitive object={atmosphereMaterial} />
-        </mesh>
-      )}
+      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 1.0)`);
+      gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
       
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 128, 128);
+    }
+    
+    const glowTexture = new THREE.CanvasTexture(canvas);
+    
+    return new THREE.SpriteMaterial({
+      map: glowTexture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+    });
+  }, [glow, glowColor]);
+
+  return (
+    <group position={position}>
       {/* Main planet */}
-      <mesh 
-        ref={planetRef} 
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <sphereGeometry args={[size, 64, 32]} />
+      <mesh ref={planetRef}>
+        <sphereGeometry args={[size, 32, 32]} />
         <primitive object={planetMaterial} />
       </mesh>
-      
-      {/* Ocean layer if enabled */}
-      {hasOcean && oceanMaterial && (
-        <mesh ref={oceanRef}>
-          <sphereGeometry args={[size * 1.01, 64, 32]} />
-          <primitive object={oceanMaterial} />
-        </mesh>
-      )}
       
       {/* Cloud layer if enabled */}
       {cloudLayer && cloudMaterial && (
         <mesh ref={cloudsRef}>
-          <sphereGeometry args={[size * 1.05, 64, 32]} />
+          <sphereGeometry args={[size * 1.05, 32, 32]} />
           <primitive object={cloudMaterial} />
         </mesh>
       )}
@@ -387,7 +166,7 @@ const Planet = ({
       {/* Rings if enabled */}
       {rings && ringMaterial && (
         <mesh ref={ringsRef}>
-          <ringGeometry args={[size * 1.5, size * ringSize, 128]} />
+          <ringGeometry args={[size * 1.5, size * ringSize, 64]} />
           <primitive object={ringMaterial} />
         </mesh>
       )}
@@ -398,122 +177,15 @@ const Planet = ({
           <primitive object={glowMaterial} />
         </sprite>
       )}
-      
-      {/* Moons */}
-      {moons.map((moon, index) => (
-        <Moon
-          key={`moon-${index}`}
-          parentSize={size}
-          {...moon}
-        />
-      ))}
     </group>
   );
 };
 
-// Moon component that orbits a planet
-const Moon = ({
-  parentSize,
-  size,
-  distance,
-  speed,
-  color,
-  tilt = 0
-}: MoonProps & { parentSize: number }) => {
-  const moonRef = useRef<THREE.Mesh>(null);
-  const moonGroupRef = useRef<THREE.Group>(null);
-  const { clock } = useThree();
-  
-  // Create moon texture
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
-    const context = canvas.getContext('2d')!;
-    
-    // Base color
-    context.fillStyle = color;
-    context.fillRect(0, 0, 256, 256);
-    
-    // Add craters
-    for (let i = 0; i < 50; i++) {
-      const x = Math.random() * 256;
-      const y = Math.random() * 256;
-      const radius = 2 + Math.random() * 10;
-      
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      
-      // Random darker or lighter crater
-      const shade = Math.random() > 0.5 
-        ? `rgba(255, 255, 255, ${0.1 + Math.random() * 0.2})`
-        : `rgba(0, 0, 0, ${0.1 + Math.random() * 0.3})`;
-        
-      context.fillStyle = shade;
-      context.fill();
-    }
-    
-    return new THREE.CanvasTexture(canvas);
-  }, [color]);
-  
-  // Create moon material
-  const moonMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(color),
-      roughness: 0.8,
-      metalness: 0.1,
-      map: texture
-    });
-  }, [color, texture]);
-  
-  useFrame(() => {
-    // Orbit around the planet
-    if (moonGroupRef.current) {
-      const time = clock.getElapsedTime();
-      
-      // Apply tilt first if needed
-      if (tilt !== 0 && moonGroupRef.current.rotation.x === 0) {
-        moonGroupRef.current.rotation.x = tilt * Math.PI / 180;
-      }
-      
-      // Then rotate around the planet
-      moonGroupRef.current.rotation.y += speed * 0.01;
-    }
-    
-    // Rotate the moon itself
-    if (moonRef.current) {
-      moonRef.current.rotation.y += speed * 0.005;
-    }
-  });
-  
-  return (
-    <group ref={moonGroupRef}>
-      <mesh 
-        ref={moonRef} 
-        position={[distance * parentSize, 0, 0]}
-      >
-        <sphereGeometry args={[size, 32, 16]} />
-        <primitive object={moonMaterial} />
-      </mesh>
-    </group>
-  );
-};
-
-// The sun - a special type of celestial body
-const Sun = ({ 
-  position, 
-  size = 25,
-  color = '#fdd835',
-  coronaColor = '#ffee58',
-  flareColor = '#ffff8d',
-  flareIntensity = 1.0,
-  rotationSpeed = 0.01
-}) => {
+// Enhanced Sun component
+const Sun = ({ position, size = 20, rotationSpeed = 0.01, color = '#ffd54f' }) => {
   const sunRef = useRef<THREE.Mesh>(null);
-  const coronaRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Sprite>(null);
-  const { clock } = useThree();
-  
+
   // Create sun texture with surface details
   const sunTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
@@ -531,305 +203,91 @@ const Sun = ({
     context.fillStyle = gradient;
     context.fillRect(0, 0, 512, 256);
     
-    // Add solar granulation pattern
-    for (let i = 0; i < 5000; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 256;
-      const radius = 1 + Math.random() * 3;
-      const alpha = 0.05 + Math.random() * 0.1;
-      
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      context.fillStyle = Math.random() > 0.5 
-        ? `rgba(255, 255, 255, ${alpha})` 
-        : `rgba(255, 180, 0, ${alpha})`;
-      context.fill();
-    }
-    
-    // Add some larger solar prominences/flares
-    for (let i = 0; i < 20; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 256;
-      const radius = 10 + Math.random() * 40;
-      
-      context.beginPath();
-      context.arc(x, y, radius, 0, Math.PI * 2);
-      context.fillStyle = `rgba(255, 235, 59, ${0.1 + Math.random() * 0.1})`;
-      context.fill();
-    }
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    return texture;
+    return new THREE.CanvasTexture(canvas);
   }, []);
-  
-  // Create corona texture
-  const coronaTexture = useMemo(() => {
+
+  // Create glow texture
+  const glowTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 256;
+    canvas.height = 256;
     const context = canvas.getContext('2d')!;
     
     const gradient = context.createRadialGradient(
-      256, 256, size * 0.9, 
-      256, 256, 256
+      128, 128, 0, 
+      128, 128, 128
     );
     
-    gradient.addColorStop(0, `${coronaColor}00`);
-    gradient.addColorStop(0.4, `${coronaColor}40`);
-    gradient.addColorStop(0.8, `${coronaColor}10`);
-    gradient.addColorStop(1, `${coronaColor}00`);
+    gradient.addColorStop(0, 'rgba(255, 255, 141, 1.0)');
+    gradient.addColorStop(0.4, 'rgba(255, 255, 141, 0.6)');
+    gradient.addColorStop(0.7, 'rgba(255, 255, 141, 0.3)');
+    gradient.addColorStop(1, 'rgba(255, 255, 141, 0)');
     
     context.fillStyle = gradient;
-    context.fillRect(0, 0, 512, 512);
-    
-    // Add some random flares
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const length = 100 + Math.random() * 150;
-      const width = 20 + Math.random() * 40;
-      
-      context.save();
-      context.translate(256, 256);
-      context.rotate(angle);
-      
-      const flareGradient = context.createRadialGradient(
-        0, 0, size, 
-        length, 0, 0
-      );
-      
-      flareGradient.addColorStop(0, `${flareColor}60`);
-      flareGradient.addColorStop(1, `${flareColor}00`);
-      
-      context.fillStyle = flareGradient;
-      context.beginPath();
-      context.ellipse(length/2, 0, length/1.5, width, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      context.restore();
-    }
+    context.fillRect(0, 0, 256, 256);
     
     return new THREE.CanvasTexture(canvas);
-  }, [size, coronaColor, flareColor]);
+  }, []);
   
-  // Create sun materials
+  // Create sun material
   const sunMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({
       color: new THREE.Color(color),
       map: sunTexture,
-      emissive: new THREE.Color(color),
-      emissiveIntensity: 1.0,
     });
   }, [color, sunTexture]);
   
-  // Corona material
-  const coronaMaterial = useMemo(() => {
+  // Create glow material
+  const glowMaterial = useMemo(() => {
     return new THREE.SpriteMaterial({
-      map: coronaTexture,
+      map: glowTexture,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      opacity: 0.8 * flareIntensity
+      opacity: 0.8
     });
-  }, [coronaTexture, flareIntensity]);
+  }, [glowTexture]);
   
-  // Light flicker effect
+  // Animate rotation
   useFrame((_, delta) => {
     if (sunRef.current) {
       sunRef.current.rotation.y += rotationSpeed * delta;
-      
-      // Subtle scale pulsing
-      const time = clock.getElapsedTime();
-      const scale = 1 + Math.sin(time * 0.5) * 0.01;
-      sunRef.current.scale.set(scale, scale, scale);
-    }
-    
-    if (coronaRef.current) {
-      const time = clock.getElapsedTime();
-      const coronaScale = 1 + Math.sin(time * 0.2) * 0.05;
-      coronaRef.current.scale.set(coronaScale * 2.5, coronaScale * 2.5, 1);
-    }
-    
-    if (glowRef.current) {
-      const time = clock.getElapsedTime();
-      const glowScale = 1 + Math.sin(time * 0.3) * 0.1;
-      glowRef.current.scale.set(
-        size * glowScale * 5, 
-        size * glowScale * 5, 
-        1
-      );
     }
   });
   
   return (
     <group position={position}>
-      {/* Sun sphere */}
+      {/* Main sun */}
       <mesh ref={sunRef}>
         <sphereGeometry args={[size, 64, 32]} />
         <primitive object={sunMaterial} />
       </mesh>
       
-      {/* Corona/flares */}
-      <sprite ref={coronaRef} scale={[size * 2.5, size * 2.5, 1]}>
-        <primitive object={coronaMaterial} />
+      {/* Glow effect */}
+      <sprite ref={glowRef} scale={[size * 4, size * 4, 1]}>
+        <primitive object={glowMaterial} />
       </sprite>
       
-      {/* Main light source */}
-      <pointLight
-        intensity={3}
-        distance={1000}
-        decay={0.1}
-        color={color}
-      />
-      
-      {/* Lens flare effect */}
-      <sprite 
-        ref={glowRef}
-        scale={[size * 5, size * 5, 1]}
-      >
-        <spriteMaterial
-          map={coronaTexture}
-          transparent={true}
-          blending={THREE.AdditiveBlending}
-          opacity={0.3}
-        />
-      </sprite>
-    </group>
-  );
-};
-
-// Asteroid for the belt
-const AsteroidRock = ({
-  position,
-  size,
-  rotationSpeed,
-  orbitSpeed = 0,
-  orbitRadius = 0,
-  orbitCenterX = 0,
-  orbitCenterZ = 0,
-  orbitTilt = 0
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [asteroidGeometry] = useState(() => {
-    // Generate a slightly irregular geometry for the asteroid
-    const baseGeometry = new THREE.IcosahedronGeometry(size, 0);
-    const positions = baseGeometry.attributes.position;
-    
-    // Add random variation to vertices
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i);
-      const y = positions.getY(i);
-      const z = positions.getZ(i);
-      
-      const variation = 0.2 + Math.random() * 0.3;
-      
-      positions.setX(i, x * (1 + Math.random() * variation - variation/2));
-      positions.setY(i, y * (1 + Math.random() * variation - variation/2));
-      positions.setZ(i, z * (1 + Math.random() * variation - variation/2));
-    }
-    
-    return baseGeometry;
-  });
-  
-  // Calculate asteroid color - varying shades of gray/brown
-  const color = useMemo(() => {
-    const baseColor = Math.random() > 0.7 
-      ? new THREE.Color(0x8d6e63) // brownish
-      : new THREE.Color(0x78909c); // grayish
-    
-    // Add some random variation
-    const r = baseColor.r * (0.9 + Math.random() * 0.2);
-    const g = baseColor.g * (0.9 + Math.random() * 0.2);
-    const b = baseColor.b * (0.9 + Math.random() * 0.2);
-    
-    return new THREE.Color(r, g, b);
-  }, []);
-  
-  // Position state
-  const [pos, setPos] = useState(position);
-  const { clock } = useThree();
-  
-  // Rotation and orbit
-  useFrame(() => {
-    if (meshRef.current) {
-      // Random tumbling rotation
-      meshRef.current.rotation.x += rotationSpeed * (0.5 + Math.random() * 0.5);
-      meshRef.current.rotation.y += rotationSpeed * (0.5 + Math.random() * 0.5);
-      meshRef.current.rotation.z += rotationSpeed * (0.5 + Math.random() * 0.5);
-      
-      // Orbital movement
-      if (orbitRadius > 0) {
-        const time = clock.getElapsedTime();
-        const angle = time * orbitSpeed;
-        
-        const x = orbitCenterX + Math.cos(angle) * orbitRadius;
-        const z = orbitCenterZ + Math.sin(angle) * orbitRadius * Math.cos(orbitTilt * Math.PI / 180);
-        const y = position[1] + Math.sin(angle) * orbitRadius * Math.sin(orbitTilt * Math.PI / 180);
-        
-        setPos([x, y, z]);
-      }
-    }
-  });
-  
-  return (
-    <mesh ref={meshRef} position={pos} geometry={asteroidGeometry}>
-      <meshStandardMaterial 
+      {/* Light source */}
+      <pointLight 
+        intensity={3} 
+        distance={1000} 
+        decay={0.1} 
         color={color} 
-        roughness={0.9}
-        metalness={0.1}
       />
-    </mesh>
+    </group>
   );
 };
 
 // Main component for all celestial bodies
 const CelestialBodies = () => {
-  // Create an asteroid belt
-  const asteroidBelt = useMemo(() => {
-    const asteroids = [];
-    const beltRadius = 150;
-    const beltWidth = 30;
-    const beltCount = 200;
-    
-    for (let i = 0; i < beltCount; i++) {
-      const angle = (i / beltCount) * Math.PI * 2;
-      const radiusVariation = (Math.random() - 0.5) * beltWidth;
-      const radius = beltRadius + radiusVariation;
-      const tilt = (Math.random() - 0.5) * 20; // degrees
-      
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      const y = Math.sin(angle) * tilt;
-      
-      const size = 0.5 + Math.random() * 2;
-      const speed = 0.01 + Math.random() * 0.02;
-      
-      asteroids.push(
-        <AsteroidRock
-          key={`asteroid-${i}`}
-          position={[x, y, z - 150]}
-          size={size}
-          rotationSpeed={speed}
-          orbitSpeed={0.003 + (Math.random() * 0.005)}
-          orbitRadius={radius}
-          orbitCenterZ={-150}
-          orbitTilt={tilt}
-        />
-      );
-    }
-    
-    return asteroids;
-  }, []);
-  
   return (
     <group>
-      {/* Central sun */}
+      {/* Sun */}
       <Sun 
         position={[300, 100, -400]} 
         size={25}
+        rotationSpeed={0.01}
         color="#ffd54f"
-        coronaColor="#ffee58"
-        flareColor="#ffff8d"
-        flareIntensity={1.2}
       />
       
       {/* Mercury */}
@@ -837,15 +295,7 @@ const CelestialBodies = () => {
         position={[250, 90, -350]}
         size={3} 
         rotationSpeed={0.005} 
-        orbitSpeed={0.012}
-        orbitRadius={30}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={5}
-        axialTilt={0.1}
         color="#9e9e9e" 
-        glow={false}
-        highlightOnHover={true}
       />
       
       {/* Venus */}
@@ -853,22 +303,11 @@ const CelestialBodies = () => {
         position={[330, 85, -350]}
         size={5} 
         rotationSpeed={0.003} 
-        orbitSpeed={0.009}
-        orbitRadius={45}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={2}
-        axialTilt={177.4}
         color="#ffeb3b" 
         cloudLayer={true}
         cloudColor="#fff9c4"
-        cloudSpeed={0.5}
-        atmosphere={true}
-        atmosphereColor="rgba(255, 235, 59, 0.2)"
         glow={true}
         glowColor="rgba(255, 235, 59, 0.2)"
-        glowSize={1.2}
-        highlightOnHover={true}
       />
       
       {/* Earth with realistic features */}
@@ -876,187 +315,64 @@ const CelestialBodies = () => {
         position={[-100, 30, -150]} 
         size={10} 
         rotationSpeed={0.05}
-        orbitSpeed={0.007}
-        orbitRadius={65}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={7.2}
-        axialTilt={23.5}
         color="#2979ff" 
         cloudLayer={true}
         cloudColor="#e1f5fe"
-        cloudSpeed={0.2}
-        atmosphere={true}
-        atmosphereColor="rgba(41, 121, 255, 0.2)"
-        atmosphereSize={1.18}
         glow={true}
         glowColor="rgba(41, 121, 255, 0.25)"
         glowSize={1.3}
-        hasOcean={true}
-        oceanColor="#0d47a1"
-        moons={[
-          {
-            size: 2.7,
-            distance: 2.5,
-            speed: 0.45,
-            color: "#bdbdbd"
-          }
-        ]}
-        highlightOnHover={true}
       />
       
-      {/* Mars with polar ice caps and moons */}
+      {/* Mars with polar ice caps */}
       <Planet 
         position={[120, 20, -120]} 
         size={6} 
         rotationSpeed={0.047}
-        orbitSpeed={0.005}
-        orbitRadius={80}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={5.6}
-        axialTilt={25.2}
         color="#e53935" 
-        atmosphere={true}
-        atmosphereColor="rgba(229, 115, 115, 0.1)"
-        atmosphereSize={1.1}
         glow={true}
         glowColor="rgba(229, 57, 53, 0.2)"
-        glowSize={1.15}
-        moons={[
-          {
-            size: 0.8,
-            distance: 1.8,
-            speed: 1.2,
-            color: "#9e9e9e"
-          },
-          {
-            size: 0.5,
-            distance: 2.4,
-            speed: 0.8,
-            color: "#9e9e9e"
-          }
-        ]}
-        highlightOnHover={true}
       />
       
-      {/* Jupiter - massive gas giant with complex cloud bands */}
+      {/* Jupiter - gas giant */}
       <Planet 
         position={[20, -10, -220]} 
         size={15} 
         rotationSpeed={0.12}
-        orbitSpeed={0.003}
-        orbitRadius={110}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={3.1}
-        axialTilt={3.1}
         color="#ffa000" 
         cloudLayer={true}
         cloudColor="#ffd54f"
-        cloudSpeed={0.3}
-        atmosphere={true}
-        atmosphereColor="rgba(255, 193, 7, 0.15)"
         glow={true}
         glowColor="rgba(255, 160, 0, 0.2)"
-        glowSize={1.2}
-        moons={[
-          {
-            size: 1.5,
-            distance: 1.8,
-            speed: 0.8,
-            color: "#e0e0e0"
-          },
-          {
-            size: 2.0,
-            distance: 2.1,
-            speed: 0.6,
-            color: "#ffcc80"
-          },
-          {
-            size: 1.8,
-            distance: 2.4,
-            speed: 0.4,
-            color: "#cfd8dc"
-          },
-          {
-            size: 1.2,
-            distance: 2.7,
-            speed: 0.3,
-            color: "#b0bec5"
-          }
-        ]}
-        highlightOnHover={true}
       />
       
-      {/* Saturn with detailed rings */}
+      {/* Saturn with rings */}
       <Planet 
         position={[-80, 50, -180]} 
         size={13} 
         rotationSpeed={0.09}
-        orbitSpeed={0.0022}
-        orbitRadius={140}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={5.5}
-        axialTilt={26.7}
         color="#fdd835" 
         cloudLayer={true}
         cloudColor="#fff59d"
-        cloudSpeed={0.25}
         rings={true}
         ringColor="#f9a825"
         ringSize={2.2}
-        ringOpacity={0.8}
-        ringRotation={15}
-        atmosphere={true}
-        atmosphereColor="rgba(253, 216, 53, 0.2)"
         glow={true}
         glowColor="rgba(253, 216, 53, 0.25)"
-        glowSize={1.25}
-        moons={[
-          {
-            size: 1.5,
-            distance: 2.8,
-            speed: 0.5,
-            color: "#bdbdbd"
-          },
-          {
-            size: 1.2,
-            distance: 3.1,
-            speed: 0.4,
-            color: "#e0e0e0"
-          }
-        ]}
-        highlightOnHover={true}
       />
       
-      {/* Uranus - ice giant with faint rings */}
+      {/* Uranus - ice giant with rings */}
       <Planet 
         position={[140, -30, -220]} 
         size={9} 
         rotationSpeed={0.06}
-        orbitSpeed={0.0016}
-        orbitRadius={170}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={6.5}
-        axialTilt={97.8} // Almost completely sideways!
         color="#00acc1" 
         cloudLayer={true}
         cloudColor="#b2ebf2"
-        cloudSpeed={0.1}
         rings={true}
         ringColor="#b2ebf2"
         ringSize={1.8}
-        ringOpacity={0.5}
-        ringRotation={5}
-        atmosphere={true}
-        atmosphereColor="rgba(0, 172, 193, 0.2)"
         glow={true}
         glowColor="rgba(0, 172, 193, 0.2)"
-        glowSize={1.2}
-        highlightOnHover={true}
       />
       
       {/* Neptune - blue gas giant */}
@@ -1064,57 +380,22 @@ const CelestialBodies = () => {
         position={[80, 40, -200]} 
         size={9} 
         rotationSpeed={0.06}
-        orbitSpeed={0.001}
-        orbitRadius={190}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={4.5}
-        axialTilt={28.3}
         color="#1565c0" 
         cloudLayer={true}
         cloudColor="#bbdefb"
-        cloudSpeed={0.3}
-        atmosphere={true}
-        atmosphereColor="rgba(21, 101, 192, 0.2)"
         glow={true}
         glowColor="rgba(21, 101, 192, 0.3)"
-        glowSize={1.25}
-        moons={[
-          {
-            size: 1.2,
-            distance: 2.5,
-            speed: 0.4,
-            color: "#bdbdbd"
-          }
-        ]}
-        highlightOnHover={true}
       />
       
-      {/* Pluto - distant dwarf planet (tiny and far) */}
+      {/* Pluto - distant dwarf planet */}
       <Planet 
         position={[-170, -60, -250]} 
         size={2.5} 
         rotationSpeed={0.02}
-        orbitSpeed={0.0005}
-        orbitRadius={210}
-        orbitCenterX={300}
-        orbitCenterZ={-400}
-        orbitTilt={17.2}
-        axialTilt={119.6}
         color="#757575" 
-        glow={false}
-        moons={[
-          {
-            size: 1.2,
-            distance: 2.2,
-            speed: 0.3,
-            color: "#9e9e9e"
-          }
-        ]}
-        highlightOnHover={true}
       />
       
-      {/* A rogue gas giant outside the system */}
+      {/* Purple gas giant */}
       <Planet 
         position={[180, 70, -250]} 
         size={12} 
@@ -1122,38 +403,9 @@ const CelestialBodies = () => {
         color="#9c27b0"
         cloudLayer={true}
         cloudColor="#ce93d8"
-        cloudSpeed={0.2}
-        atmosphere={true}
-        atmosphereColor="rgba(156, 39, 176, 0.2)"
         glow={true}
         glowColor="rgba(156, 39, 176, 0.2)"
-        glowSize={1.3}
-        moons={[
-          {
-            size: 2.0,
-            distance: 2.0,
-            speed: 0.3,
-            color: "#b39ddb"
-          },
-          {
-            size: 1.5,
-            distance: 2.5,
-            speed: 0.2,
-            tilt: 40,
-            color: "#7e57c2"
-          },
-          {
-            size: 1.0,
-            distance: 3.0,
-            speed: 0.5,
-            color: "#9575cd"
-          }
-        ]}
-        highlightOnHover={true}
       />
-      
-      {/* Asteroid Belt */}
-      {asteroidBelt}
     </group>
   );
 };

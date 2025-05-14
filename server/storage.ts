@@ -36,18 +36,21 @@ export class MemStorage implements IStorage {
         name: "CloudSync",
         description: "Team collaboration and file sharing platform",
         url: "https://cloudsync.example.com",
+        founder_twitter: "alexharris",
         position: [5, 0, 3]
       },
       {
         name: "TaskForce",
         description: "Project management and task tracking solution",
         url: "https://taskforce.example.com",
+        founder_twitter: "sarahsmith",
         position: [-4, 0, 7]
       },
       {
         name: "AnalyticsPro",
         description: "Advanced analytics and reporting dashboard",
         url: "https://analyticspro.example.com",
+        founder_twitter: "michaelchen",
         position: [3, 0, -5]
       }
     ];
