@@ -82,7 +82,8 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
         ref={popupRef}
         className={`product-popup ${isVisible ? 'visible' : ''}`}
         style={{
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          backgroundColor: 'white'
         }}
       >
         <div className="popup-glow"></div>
