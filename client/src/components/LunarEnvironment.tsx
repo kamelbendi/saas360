@@ -60,8 +60,8 @@ const LunarEnvironment = () => {
 
   // Set fixed camera position
   useEffect(() => {
-    // Set initial camera position
-    const initialPosition = new THREE.Vector3(0, 20, 30);
+    // Set initial camera position - closer to the moon
+    const initialPosition = new THREE.Vector3(0, 15, 22);
     setCameraPosition([initialPosition.x, initialPosition.y, initialPosition.z]);
     camera.position.copy(initialPosition);
     
@@ -74,8 +74,8 @@ const LunarEnvironment = () => {
       // Remove azimuth limits to enable 360-degree rotation
       controls.current.minAzimuthAngle = -Infinity; // No limit for left rotation
       controls.current.maxAzimuthAngle = Infinity; // No limit for right rotation
-      controls.current.minDistance = 20; // Don't zoom in too close
-      controls.current.maxDistance = 50; // Don't zoom out too far
+      controls.current.minDistance = 15; // Allow closer zooming
+      controls.current.maxDistance = 45; // Don't zoom out too far
       controls.current.enablePan = false; // Disable panning
     }
   }, [camera, setCameraPosition]);

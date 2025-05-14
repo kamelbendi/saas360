@@ -246,19 +246,19 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
           style={{ 
             pointerEvents: 'none', 
             whiteSpace: 'nowrap',
-            padding: '5px 12px',
-            fontSize: '14px',
+            padding: '8px 16px',
+            fontSize: '18px',
             fontWeight: 'bold', 
             backgroundColor: 'white',
             color: '#111',
-            border: `2px solid ${hovered ? "#ffff00" : "#007bff"}`,
-            borderRadius: '6px',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4)',
-            transform: `scale(${hovered ? 1.1 : 1})`,
+            border: `3px solid ${hovered ? "#ffff00" : "#007bff"}`,
+            borderRadius: '8px',
+            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.5)',
+            transform: `scale(${hovered ? 1.15 : 1})`,
             transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '10px'
           }}
         >
           {product.founder_twitter && (
@@ -266,10 +266,11 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
               src={`https://unavatar.io/twitter/${product.founder_twitter}`}
               alt={`${product.founder_twitter}'s profile`}
               style={{
-                width: '20px',
-                height: '20px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
-                border: '1px solid #007bff'
+                border: '2px solid #007bff',
+                objectFit: 'cover'
               }}
             />
           )}

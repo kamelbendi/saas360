@@ -8,9 +8,11 @@ interface ProductPopupHtmlProps {
     description: string;
     url: string;
     founder_twitter?: string;
+    position: number[];
   };
   onClose: () => void;
   onDelete?: () => void;
+  onStartBurning?: (productId: number, position: number[]) => void;
 }
 
 const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps) => {
@@ -36,20 +38,40 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
     }, 300); // Match animation duration
   };
   
-  // Handle delete product
+  // Track burning animation state
+  const [isBurning, setIsBurning] = useState(false);
+
+  // Handle deleting (burning) product
   const handleDelete = async () => {
-    if (isDeleting) return; // Prevent multiple clicks
+    if (isDeleting || isBurning) return; // Prevent multiple clicks
     
     setIsDeleting(true);
+    
     try {
-      if (onDelete) {
-        await onDelete();
-      }
-      handleClose();
+      // Start burn animation
+      setIsBurning(true);
+      
+      // Only perform the actual deletion after a slight delay to let animation start
+      setTimeout(async () => {
+        if (onDelete) {
+          await onDelete();
+        }
+        
+        // We don't close the popup right away, the BurningFlag component will 
+        // trigger a page reload when animation completes
+      }, 500);
+      
     } catch (error) {
       console.error('Failed to delete product:', error);
       setIsDeleting(false);
+      setIsBurning(false);
     }
+  };
+  
+  // Function to reload the page when burning completes
+  const handleBurnComplete = () => {
+    // Page reload when the burning animation is complete
+    window.location.reload();
   };
   
   // Handle click outside to close
