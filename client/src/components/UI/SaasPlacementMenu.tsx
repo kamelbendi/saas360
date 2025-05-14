@@ -41,12 +41,6 @@ const SaasPlacementMenu = ({ position, onClose, onAddProduct }: SaasPlacementMen
         >
           Add SaaS Product
         </button>
-        <button 
-          className="text-left w-full px-3 py-2 text-sm rounded hover:bg-primary/20 text-white"
-          onClick={onClose}
-        >
-          Cancel
-        </button>
       </div>
     </div>,
     document.body
