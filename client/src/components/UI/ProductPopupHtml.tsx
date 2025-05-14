@@ -68,12 +68,11 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
     };
   }, [onClose]);
   
-  // Calculate position in viewport (centered)
+  // Position in top right corner
   const popupStyle = {
     position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    top: '20px',
+    right: '20px',
     zIndex: 1000
   } as React.CSSProperties;
   

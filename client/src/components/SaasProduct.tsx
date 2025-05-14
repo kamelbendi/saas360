@@ -30,85 +30,81 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
   // Create position from the product data
   const position = new THREE.Vector3(...product.position);
   
-  // Create logo texture for the flag
+  // Function to extract domain from URL
+  const extractDomainFromUrl = (url: string): string => {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.replace('www.', '').split('.')[0]; // Get the main domain name
+    } catch (e) {
+      return product.name; // Fallback to name if URL is invalid
+    }
+  };
+  
+  // Extract domain for favicon
+  const domain = useMemo(() => extractDomainFromUrl(product.url), [product.url]);
+  
+  // Function to create favicon URL
+  const getFaviconUrl = (domain: string): string => {
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  };
+  
+  // Create American flag style texture with logo from domain
   const logoTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 128;
+    canvas.width = 512;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      // Background color
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 256, 128);
+      // Draw red and white stripes (American flag style)
+      const stripeHeight = canvas.height / 7; // 7 stripes total
+      for (let i = 0; i < 7; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#FF0000' : '#FFFFFF';
+        ctx.fillRect(0, i * stripeHeight, canvas.width, stripeHeight);
+      }
       
-      // Draw border
-      ctx.strokeStyle = hovered ? '#1976d2' : '#2196f3';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(2, 2, 252, 124);
+      // Draw blue rectangle (union) in the top left
+      ctx.fillStyle = '#002868';
+      ctx.fillRect(0, 0, canvas.width * 0.4, canvas.height * 0.5);
       
-      // "SAAS" text at the top of the flag
-      ctx.font = 'bold 16px Arial';
-      ctx.fillStyle = '#000000';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillText('SAAS', 128, 10);
+      // Draw stars or logo in the blue rectangle
+      const logoSize = canvas.height * 0.4;
+      const logoX = canvas.width * 0.2;
+      const logoY = canvas.height * 0.25;
       
-      // Add underline below SAAS
+      // Create a temporary image for favicon
+      const faviconImg = new Image();
+      faviconImg.crossOrigin = "Anonymous"; // Allow cross-origin image loading
+      
+      // Draw the company logo or a placeholder circle with the first letter
+      // Since we can't await the image load in a synchronous function,
+      // we'll draw a placeholder first and update it when image loads
+      
+      // Draw placeholder circle with first letter for now
       ctx.beginPath();
-      ctx.moveTo(88, 28);
-      ctx.lineTo(168, 28);
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      
-      // Draw logo (circle with first letter of company name)
-      ctx.beginPath();
-      ctx.arc(64, 64, 30, 0, Math.PI * 2);
-      ctx.fillStyle = hovered ? '#1976d2' : '#2196f3';
+      ctx.arc(logoX, logoY, logoSize/2, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
       ctx.fill();
       
-      // First letter of company in white
-      ctx.font = 'bold 36px Arial';
-      ctx.fillStyle = '#ffffff';
+      // Draw the first letter
+      ctx.font = `bold ${logoSize * 0.5}px Arial`;
+      ctx.fillStyle = '#002868';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(product.name.charAt(0).toUpperCase(), 64, 64);
+      ctx.fillText(product.name.charAt(0).toUpperCase(), logoX, logoY);
       
-      // Draw company name
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold 20px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      // Wrap text if too long
-      const name = product.name;
-      if (name.length > 10) {
-        const words = name.split(' ');
-        let line1 = '';
-        let line2 = '';
-        
-        if (words.length > 1) {
-          // Try to split at spaces
-          const middleIndex = Math.floor(words.length / 2);
-          line1 = words.slice(0, middleIndex).join(' ');
-          line2 = words.slice(middleIndex).join(' ');
-        } else {
-          // Split in the middle if it's a single word
-          const middle = Math.floor(name.length / 2);
-          line1 = name.slice(0, middle);
-          line2 = name.slice(middle);
-        }
-        
-        ctx.fillText(line1, 170, 50);
-        ctx.fillText(line2, 170, 78);
-      } else {
-        ctx.fillText(name, 170, 64);
+      // Add glow/highlight effect when hovered
+      if (hovered) {
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = "#FFFF00";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
       }
     }
     
     return new THREE.CanvasTexture(canvas);
-  }, [product.name, hovered]);
+  }, [product.name, product.url, domain, hovered]);
   
   // Handle hover and click interactions
   const handlePointerOver = () => {
@@ -164,36 +160,60 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
         />
       </mesh>
       
-      {/* Flag pole - shorter and vertical */}
+      {/* Flag pole - metallic, slightly taller */}
       <animated.mesh 
-        position={[0, 0.9, 0]} 
+        position={[0, 1.0, 0]} 
         rotation-x={poleSpring.rotateX}
         rotation-y={poleSpring.rotateY}
         rotation-z={poleSpring.rotateZ}
       >
-        <cylinderGeometry args={[0.02, 0.02, 1.8, 8]} />
+        <cylinderGeometry args={[0.02, 0.02, 2.0, 8]} />
         <meshStandardMaterial 
           color="#a0a0a0" 
-          roughness={0.5}
+          roughness={0.1}
           metalness={0.9}
         />
         
-        {/* Flag with logo - smaller and positioned right */}
+        {/* Flag with logo - positioned right */}
         <mesh 
           ref={floatingRef} 
           position={[0.35, 0.7, 0]} 
           rotation={[0, Math.PI/2, 0]}
-          scale={[0.7, 0.5, 0.7]}
+          scale={[0.75, 0.5, 0.75]}
         >
-          <planeGeometry args={[1.5, 0.8]} />
+          <planeGeometry args={[1.5, 0.8, 4, 4]} />
           <meshStandardMaterial 
             map={logoTexture}
             side={THREE.DoubleSide}
-            roughness={0.4}
-            metalness={0.2}
+            roughness={0.3}
+            metalness={0.1}
+            emissive={hovered ? "#ffffaa" : "#ffffff"}
+            emissiveIntensity={hovered ? 0.2 : 0}
           />
         </mesh>
       </animated.mesh>
+      
+      {/* Product name label that always faces the camera */}
+      <Html position={[0, 2.2, 0]} center transform occlude>
+        <div 
+          className={`product-label ${hovered ? 'product-label-hover' : ''}`}
+          style={{ 
+            pointerEvents: 'none', 
+            whiteSpace: 'nowrap',
+            fontSize: '12px',
+            fontWeight: 'bold', 
+            padding: '4px 8px',
+            backgroundColor: 'white',
+            color: 'black',
+            borderRadius: '4px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+            opacity: hovered ? 1 : 0.9,
+            transform: `scale(${hovered ? 1.1 : 1})`
+          }}
+        >
+          {product.name}
+        </div>
+      </Html>
       
       {/* Light on ground when selected */}
       {isSelected && (
