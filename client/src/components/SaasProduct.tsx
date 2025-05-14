@@ -51,44 +51,44 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
   // Create American flag style texture with logo from domain
   const logoTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 256;
+    canvas.width = 256; // Reduced for better performance
+    canvas.height = 128;
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      // Draw red and white stripes (American flag style)
+      // Draw red and white stripes (American flag style) - brighter red
       const stripeHeight = canvas.height / 7; // 7 stripes total
       for (let i = 0; i < 7; i++) {
-        ctx.fillStyle = i % 2 === 0 ? '#FF0000' : '#FFFFFF';
+        ctx.fillStyle = i % 2 === 0 ? '#FF3030' : '#FFFFFF'; // Brighter red
         ctx.fillRect(0, i * stripeHeight, canvas.width, stripeHeight);
       }
       
-      // Draw blue rectangle (union) in the top left
-      ctx.fillStyle = '#002868';
+      // Draw blue rectangle (union) in the top left - brighter blue
+      ctx.fillStyle = '#0055AA'; // Brighter blue
       ctx.fillRect(0, 0, canvas.width * 0.4, canvas.height * 0.5);
       
-      // Draw stars or logo in the blue rectangle
+      // Draw logo in the blue rectangle
       const logoSize = canvas.height * 0.4;
       const logoX = canvas.width * 0.2;
       const logoY = canvas.height * 0.25;
       
-      // Create a temporary image for favicon
-      const faviconImg = new Image();
-      faviconImg.crossOrigin = "Anonymous"; // Allow cross-origin image loading
-      
-      // Draw the company logo or a placeholder circle with the first letter
-      // Since we can't await the image load in a synchronous function,
-      // we'll draw a placeholder first and update it when image loads
-      
-      // Draw placeholder circle with first letter for now
+      // Draw bright circle with first letter
       ctx.beginPath();
       ctx.arc(logoX, logoY, logoSize/2, 0, Math.PI * 2);
       ctx.fillStyle = '#FFFFFF';
       ctx.fill();
       
+      // Add light outer glow for better visibility
+      ctx.beginPath();
+      ctx.arc(logoX, logoY, logoSize/2 + 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
       // Draw the first letter
       ctx.font = `bold ${logoSize * 0.5}px Arial`;
-      ctx.fillStyle = '#002868';
+      ctx.fillStyle = '#0055AA'; // Match the blue color
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(product.name.charAt(0).toUpperCase(), logoX, logoY);
@@ -96,15 +96,17 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       // Add glow/highlight effect when hovered
       if (hovered) {
         ctx.save();
-        ctx.globalAlpha = 0.3;
+        ctx.globalAlpha = 0.4; // Stronger glow
         ctx.fillStyle = "#FFFF00";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
       }
     }
     
-    return new THREE.CanvasTexture(canvas);
-  }, [product.name, product.url, domain, hovered]);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, [product.name, hovered]); // Removed dependencies that were causing excess re-renders
   
   // Handle hover and click interactions
   const handlePointerOver = () => {
@@ -125,20 +127,27 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
   // Get camera for facing rotation logic
   const { camera } = useThree();
   
-  // Make objects face the camera
+  // Get references for the name label
+  const labelRef = useRef<THREE.Group>(null);
+  
+  // Make objects face the camera with better performance
   useFrame(() => {
     if (floatingRef.current) {
-      // Flag faces camera
-      const flagPosition = new THREE.Vector3();
-      floatingRef.current.getWorldPosition(flagPosition);
+      // Update flag to face camera (horizontally only)
+      const cameraXZ = new THREE.Vector3(camera.position.x, 0, camera.position.z);
+      const flagXZ = new THREE.Vector3(position.x, 0, position.z);
+      const angleToCamera = Math.atan2(
+        cameraXZ.x - flagXZ.x,
+        cameraXZ.z - flagXZ.z
+      );
       
-      // Make flag face camera
-      const lookAtPosition = new THREE.Vector3().copy(flagPosition);
-      lookAtPosition.x = camera.position.x;
-      lookAtPosition.z = camera.position.z;
-      lookAtPosition.y = flagPosition.y;
-      
-      floatingRef.current.lookAt(lookAtPosition);
+      // Apply rotation to flag (Y-axis only for performance)
+      floatingRef.current.rotation.y = angleToCamera;
+    }
+    
+    // Make text label also face camera fully
+    if (labelRef.current) {
+      labelRef.current.lookAt(camera.position);
     }
   });
   
@@ -197,43 +206,49 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
           <meshStandardMaterial 
             map={logoTexture}
             side={THREE.DoubleSide}
-            roughness={0.3}
-            metalness={0.1}
-            emissive={hovered ? "#ffffaa" : "#ffffff"}
-            emissiveIntensity={hovered ? 0.2 : 0}
+            roughness={0.1}
+            metalness={0.2}
+            emissive={hovered ? "#ffffcc" : "#ffffff"} 
+            emissiveIntensity={hovered ? 0.5 : 0.2} // Always some emission for visibility
+            toneMapped={false} // Makes colors brighter
           />
         </mesh>
+        
+        {/* Add point light to make the flag more visible */}
+        <pointLight
+          position={[0.75, 0.7, 0.1]}
+          intensity={0.5}
+          distance={1.5}
+          color="#ffffff"
+        />
       </animated.mesh>
       
-      {/* Product name label that always faces the camera */}
-      <Html 
-        position={[0, 2.2, 0]} 
-        center 
-        transform
-        occlude
-        distanceFactor={10} // Makes text maintain consistent size regardless of distance
-      >
-        <div 
-          className={`product-label ${hovered ? 'product-label-hover' : ''}`}
-          style={{ 
-            pointerEvents: 'none', 
-            whiteSpace: 'nowrap',
-            fontSize: '14px',
-            fontWeight: 'bold', 
-            padding: '5px 10px',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            color: 'black',
-            borderRadius: '4px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-            opacity: hovered ? 1 : 0.9,
-            transform: `scale(${hovered ? 1.1 : 1})`,
-            transition: 'all 0.2s ease',
-            border: '1px solid rgba(0,0,0,0.1)'
-          }}
+      {/* Improved name label - always visible with better contrast */}
+      <group ref={labelRef} position={[0, 2.3, 0]}>
+        {/* Add a dark backing for better visibility */}
+        <mesh position={[0, 0, -0.01]}>
+          <planeGeometry args={[1.5, 0.4]} />
+          <meshBasicMaterial color="black" transparent opacity={0.5} />
+        </mesh>
+        
+        {/* Text using Text component (always faces camera) */}
+        <Text
+          color="white"
+          fontSize={0.15}
+          maxWidth={2}
+          lineHeight={1}
+          letterSpacing={0.05}
+          textAlign="center"
+          outlineWidth={0.015}
+          outlineColor={hovered ? "#ffff00" : "#000000"}
+          anchorX="center"
+          anchorY="middle"
         >
           {product.name}
-        </div>
-      </Html>
+        </Text>
+      </group>
+      
+
       
       {/* Light on ground when selected */}
       {isSelected && (

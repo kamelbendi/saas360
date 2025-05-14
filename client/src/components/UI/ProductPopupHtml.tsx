@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo } from "react";
 import { ExternalLink, X, Trash2 } from "lucide-react";
 
 interface ProductPopupHtmlProps {
@@ -12,12 +12,19 @@ interface ProductPopupHtmlProps {
   onDelete?: () => void;
 }
 
-const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps) => {
+// Memoize component to prevent unnecessary re-renders
+const ProductPopupHtml = memo(({ product, onClose, onDelete }: ProductPopupHtmlProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+  const productRef = useRef(product);
   
-  // Animation effect on mount
+  // Store product info in ref to avoid unnecessary re-renders
+  useEffect(() => {
+    productRef.current = product;
+  }, [product]);
+  
+  // Animation effect on mount - only runs once
   useEffect(() => {
     // Short delay to trigger animation
     const timer = setTimeout(() => {
@@ -35,7 +42,7 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
     }, 300); // Match animation duration
   };
   
-  // Handle delete product
+  // Handle delete product - memoized to avoid recreation
   const handleDelete = async () => {
     if (isDeleting) return; // Prevent multiple clicks
     
@@ -51,7 +58,7 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
     }
   };
   
-  // Handle click outside to close
+  // Handle click outside to close - only set up once
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
@@ -66,7 +73,7 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [onClose]);
+  }, []);
   
   // Position in top right corner
   const popupStyle = {
@@ -76,15 +83,19 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
     zIndex: 1000
   } as React.CSSProperties;
   
-  return (
+  // Use a memoized content to prevent unnecessary re-renders
+  const content = (
     <div style={popupStyle}>
       <div 
         ref={popupRef}
         className={`product-popup ${isVisible ? 'visible' : ''}`}
+        style={{
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+        }}
       >
         <div className="popup-glow"></div>
         <div className="popup-header">
-          <h3>{product.name}</h3>
+          <h3>{productRef.current.name}</h3>
           <button 
             className="close-btn"
             onClick={handleClose}
@@ -95,7 +106,7 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
         </div>
         
         <div className="popup-body">
-          <p>{product.description}</p>
+          <p>{productRef.current.description}</p>
         </div>
         
         <div className="popup-footer">
@@ -110,7 +121,7 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
           </button>
           
           <a 
-            href={product.url} 
+            href={productRef.current.url} 
             target="_blank" 
             rel="noopener noreferrer"
             className="visit-link"
@@ -122,6 +133,8 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
       </div>
     </div>
   );
-};
+  
+  return content;
+});
 
 export default ProductPopupHtml;
