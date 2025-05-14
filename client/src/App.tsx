@@ -52,7 +52,10 @@ function App() {
     
     // Add product to database
     try {
+      console.log("Adding product with data:", newProduct);
       const createdProduct = await addProduct(newProduct);
+      console.log("Created product:", createdProduct);
+      
       hideContextMenu();
       setIsPlacingProduct(false);
       setPlacementPosition(null);
@@ -63,15 +66,15 @@ function App() {
       // Show confetti celebration
       setShowConfetti(true);
       
-      // Refresh product list and show the newly created product
+      // Refresh product list
       await fetchProducts();
       
-      // Select the newly created product to show it (after a slight delay)
-      setTimeout(() => {
-        if (createdProduct) {
-          setSelectedProduct(createdProduct);
-        }
-      }, 500);
+      // Select the newly created product to show it
+      if (createdProduct && createdProduct.id) {
+        console.log("Setting selected product:", createdProduct);
+        // Immediate selection
+        setSelectedProduct(createdProduct);
+      }
     } catch (error) {
       console.error('Error adding product:', error);
     }
