@@ -11,6 +11,7 @@ import FloatingTitle from "./components/UI/FloatingTitle";
 import LunarEnvironment from "./components/LunarEnvironment";
 import SaasPlacementMenu from "./components/UI/SaasPlacementMenu";
 import ProductPopup from "./components/UI/ProductPopup";
+import ProductPopupHtml from "./components/UI/ProductPopupHtml";
 import "@fontsource/inter";
 
 function App() {
@@ -190,9 +191,8 @@ function App() {
           
           {/* Selected Product Popup */}
           {selectedProduct && (
-            <ProductPopup 
+            <ProductPopupHtml 
               product={selectedProduct}
-              position={selectedProduct.position as [number, number, number]}
               onClose={() => setSelectedProduct(null)}
               onDelete={async () => {
                 await deleteProduct(selectedProduct.id);
