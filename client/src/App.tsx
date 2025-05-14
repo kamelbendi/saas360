@@ -28,7 +28,14 @@ function App() {
     setIsPlacingProduct
   } = useLunarStore();
   
-  const { addProduct, fetchProducts } = useSupabaseProducts();
+  const { addProduct, fetchProducts, deleteProduct } = useSupabaseProducts();
+  
+  // Fetch products when the app starts
+  useEffect(() => {
+    if (!isLoading) {
+      fetchProducts();
+    }
+  }, [isLoading, fetchProducts]);
   
   // Handle adding a new product
   const handleAddProduct = async (productData: any) => {
@@ -187,6 +194,12 @@ function App() {
               product={selectedProduct}
               position={selectedProduct.position as [number, number, number]}
               onClose={() => setSelectedProduct(null)}
+              onDelete={async () => {
+                await deleteProduct(selectedProduct.id);
+                setSelectedProduct(null);
+                // Re-fetch products to update the UI
+                fetchProducts();
+              }}
             />
           )}
         </>

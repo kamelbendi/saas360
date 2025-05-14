@@ -383,7 +383,7 @@ canvas {
 
 .popup-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 .visit-link {
@@ -402,6 +402,31 @@ canvas {
 
 .visit-link:hover {
   background-color: rgb(79, 82, 221);
+}
+
+.delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgb(220, 38, 38);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: rgb(185, 28, 28);
+}
+
+.delete-btn:disabled {
+  background-color: rgb(150, 100, 100);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* SaaS Product Selected Badge */

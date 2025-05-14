@@ -15,11 +15,10 @@ interface ProductPopupProps {
   onDelete?: () => void;
 }
 
-const ProductPopup = ({ product, position, onClose }: ProductPopupProps) => {
+const ProductPopup = ({ product, position, onClose, onDelete }: ProductPopupProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
-  const { deleteProduct } = useSupabaseProducts();
   
   // Animation effect on mount
   useEffect(() => {
@@ -45,7 +44,9 @@ const ProductPopup = ({ product, position, onClose }: ProductPopupProps) => {
     
     setIsDeleting(true);
     try {
-      await deleteProduct(product.id);
+      if (onDelete) {
+        await onDelete();
+      }
       handleClose();
     } catch (error) {
       console.error('Failed to delete product:', error);
