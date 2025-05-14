@@ -7,7 +7,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/flags", async (req, res) => {
     try {
       const flags = await storage.getAllFlags();
-      res.json(flags);
+      
+      // Ensure position data is correctly formatted for all flags
+      const formattedFlags = flags.map(flag => {
+        let position = flag.position;
+        
+        // Ensure position is an array
+        if (!Array.isArray(position)) {
+          console.warn(`Flag ${flag.id} has invalid position format:`, position);
+          try {
+            if (typeof position === 'string') {
+              position = JSON.parse(position);
+            } else {
+              position = [0, 0, 0];
+            }
+          } catch (e) {
+            console.error(`Error parsing position for flag ${flag.id}:`, e);
+            position = [0, 0, 0];
+          }
+        }
+        
+        // Ensure position has 3 values
+        if (!Array.isArray(position) || position.length !== 3) {
+          position = [0, 0, 0];
+        }
+        
+        return {
+          ...flag,
+          position
+        };
+      });
+      
+      console.log("Returning formatted flags:", formattedFlags);
+      res.json(formattedFlags);
     } catch (error) {
       console.error("Error fetching flags:", error);
       res.status(500).json({ message: "Failed to fetch flags" });
@@ -26,7 +58,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Flag not found" });
       }
       
-      res.json(flag);
+      // Ensure position data is correct
+      let position = flag.position;
+      
+      if (!Array.isArray(position)) {
+        console.warn(`Flag ${flag.id} has invalid position format:`, position);
+        try {
+          if (typeof position === 'string') {
+            position = JSON.parse(position);
+          } else {
+            position = [0, 0, 0];
+          }
+        } catch (e) {
+          console.error(`Error parsing position for flag ${flag.id}:`, e);
+          position = [0, 0, 0];
+        }
+      }
+      
+      // Ensure position has 3 values
+      if (!Array.isArray(position) || position.length !== 3) {
+        position = [0, 0, 0];
+      }
+      
+      const formattedFlag = {
+        ...flag,
+        position
+      };
+      
+      console.log("Returning individual flag:", formattedFlag);
+      res.json(formattedFlag);
     } catch (error) {
       console.error("Error fetching flag:", error);
       res.status(500).json({ message: "Failed to fetch flag" });
@@ -37,19 +97,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { name, description, url, author, position } = req.body;
       
+      console.log("Received flag data:", { name, description, url, author, position });
+      
       // Basic validation
       if (!name || !description || !url || !position) {
         return res.status(400).json({ message: "Missing required fields" });
       }
+      
+      // Ensure position is an array with 3 values
+      let positionArray = position;
+      if (!Array.isArray(position)) {
+        console.warn("Position is not an array:", position);
+        try {
+          if (typeof position === 'string') {
+            positionArray = JSON.parse(position);
+          } else {
+            positionArray = [0, 0, 0];
+          }
+        } catch (e) {
+          console.error("Error parsing position:", e);
+          positionArray = [0, 0, 0];
+        }
+      }
+      
+      // Make sure we have 3 numbers in the array
+      if (!Array.isArray(positionArray) || positionArray.length !== 3) {
+        positionArray = [0, 0, 0];
+      }
+      
+      console.log("Normalized position:", positionArray);
       
       const newFlag = await storage.createFlag({
         name,
         description,
         url,
         author: author || "",
-        position
+        position: positionArray
       });
       
+      console.log("Created new flag:", newFlag);
       res.status(201).json(newFlag);
     } catch (error) {
       console.error("Error creating flag:", error);
