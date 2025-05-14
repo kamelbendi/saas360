@@ -207,9 +207,9 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
             map={logoTexture}
             side={THREE.DoubleSide}
             roughness={0.1}
-            metalness={0.2}
+            metalness={0.3}
             emissive={hovered ? "#ffffcc" : "#ffffff"} 
-            emissiveIntensity={hovered ? 0.5 : 0.2} // Always some emission for visibility
+            emissiveIntensity={hovered ? 0.7 : 0.4} // Increased for better visibility
             toneMapped={false} // Makes colors brighter
           />
         </mesh>
@@ -217,36 +217,54 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
         {/* Add point light to make the flag more visible */}
         <pointLight
           position={[0.75, 0.7, 0.1]}
-          intensity={0.5}
-          distance={1.5}
+          intensity={1.0}
+          distance={2}
           color="#ffffff"
+          decay={1}
+        />
+        
+        {/* Add spotlight for better visibility from angles */}
+        <spotLight 
+          position={[0.75, 1.2, 0.3]} 
+          angle={0.5}
+          penumbra={0.5}
+          intensity={1.5}
+          distance={3}
+          color="#ffffff"
+          target={floatingRef.current}
         />
       </animated.mesh>
       
-      {/* Improved name label - always visible with better contrast */}
-      <group ref={labelRef} position={[0, 2.3, 0]}>
-        {/* Add a dark backing for better visibility */}
-        <mesh position={[0, 0, -0.01]}>
-          <planeGeometry args={[1.5, 0.4]} />
-          <meshBasicMaterial color="black" transparent opacity={0.5} />
-        </mesh>
-        
-        {/* Text using Text component (always faces camera) */}
-        <Text
-          color="white"
-          fontSize={0.15}
-          maxWidth={2}
-          lineHeight={1}
-          letterSpacing={0.05}
-          textAlign="center"
-          outlineWidth={0.015}
-          outlineColor={hovered ? "#ffff00" : "#000000"}
-          anchorX="center"
-          anchorY="middle"
+      {/* HTML-based name label that always follows camera properly */}
+      <Html 
+        position={[0, 2.3, 0]} 
+        center 
+        sprite
+        transform
+        occlude={false}
+        distanceFactor={8}
+        zIndexRange={[100, 0]}
+      >
+        <div 
+          style={{ 
+            pointerEvents: 'none', 
+            whiteSpace: 'nowrap',
+            padding: '5px 12px',
+            fontSize: '14px',
+            fontWeight: 'bold', 
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            color: 'white',
+            border: `2px solid ${hovered ? "#ffff00" : "white"}`,
+            borderRadius: '6px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4)',
+            transform: `scale(${hovered ? 1.1 : 1})`,
+            transition: 'all 0.2s ease',
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+          }}
         >
           {product.name}
-        </Text>
-      </group>
+        </div>
+      </Html>
       
 
       
