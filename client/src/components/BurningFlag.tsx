@@ -1,7 +1,6 @@
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useSpring, animated } from "@react-spring/three";
 
 interface BurningFlagProps {
   position: [number, number, number];
@@ -13,8 +12,14 @@ const BurningFlag = ({ position, onComplete }: BurningFlagProps) => {
   const fireRef = useRef<THREE.Points>(null);
   const poleRef = useRef<THREE.Mesh>(null);
   const flagRef = useRef<THREE.Mesh>(null);
-  const burnTimer = useRef<number>(0);
   const burnDuration = 2.5; // seconds
+  
+  // Animation values
+  const [flagOpacity, setFlagOpacity] = useState(1);
+  const [flagScale, setFlagScale] = useState(1);
+  const [flagRotationX, setFlagRotationX] = useState(0);
+  const [flagRotationZ, setFlagRotationZ] = useState(0);
+  const [poleRotationX, setPoleRotationX] = useState(0);
   
   // Create particles for fire effect
   const fireParticles = useMemo(() => {
@@ -62,46 +67,27 @@ const BurningFlag = ({ position, onComplete }: BurningFlagProps) => {
     return geometry;
   }, []);
   
-  // Burning animation state for flag
-  const [flagSpring, flagApi] = useSpring(() => ({
-    scale: [1, 1, 1] as readonly [number, number, number],
-    opacity: 1,
-    rotation: [0, 0, 0] as readonly [number, number, number],
-    config: { duration: burnDuration * 1000 }
-  }));
-  
-  // Pole falling animation state
-  const [poleSpring, poleApi] = useSpring(() => ({
-    rotation: [0, 0, 0] as readonly [number, number, number],
-    config: { mass: 1, tension: 180, friction: 30 }
-  }));
-  
-  // Start the burning animation
-  useEffect(() => {
-    // Start flag burning animation
-    flagApi.start({
-      scale: [0.1, 0.1, 0.1],
-      opacity: 0,
-      rotation: [Math.PI * 0.1, 0, Math.PI * 0.05],
-    });
-    
-    // Start pole falling animation after a delay
-    setTimeout(() => {
-      poleApi.start({
-        rotation: [Math.PI / 2, 0, 0],
-      });
-    }, burnDuration * 500);
-    
-    // Call onComplete when the animation is finished
-    const timer = setTimeout(() => {
-      onComplete();
-    }, burnDuration * 1000);
-    
-    return () => clearTimeout(timer);
-  }, [flagApi, poleApi, onComplete]);
-  
-  // Fire particle animation
+  // Flag burning animation
   useFrame((_, delta) => {
+    // Update flag opacity and scale
+    if (flagOpacity > 0) {
+      setFlagOpacity(prev => Math.max(0, prev - delta / burnDuration));
+    }
+    
+    if (flagScale > 0.1) {
+      setFlagScale(prev => Math.max(0.1, prev - delta / burnDuration));
+    }
+    
+    // Add some random wobble to flag as it burns
+    setFlagRotationX(prev => prev + delta * 0.2);
+    setFlagRotationZ(prev => prev + delta * 0.3);
+    
+    // Pole falling animation starts halfway through the burn
+    if (flagOpacity < 0.5 && poleRotationX < Math.PI / 2) {
+      setPoleRotationX(prev => Math.min(Math.PI / 2, prev + delta * 1.2));
+    }
+    
+    // Fire particle animation
     if (fireRef.current) {
       const positions = fireRef.current.geometry.attributes.position.array as Float32Array;
       const count = positions.length / 3;
@@ -126,20 +112,24 @@ const BurningFlag = ({ position, onComplete }: BurningFlagProps) => {
       
       fireRef.current.geometry.attributes.position.needsUpdate = true;
     }
-    
-    // Track burn progress
-    burnTimer.current += delta;
   });
+  
+  // Complete animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, burnDuration * 1000);
+    
+    return () => clearTimeout(timer);
+  }, [onComplete, burnDuration]);
   
   return (
     <group ref={groupRef} position={position}>
       {/* Falling flag pole */}
-      <animated.mesh 
+      <mesh 
         ref={poleRef}
         position={[0, 1.0, 0]} 
-        rotation-x={poleSpring.rotation.to(r => r[0])}
-        rotation-y={poleSpring.rotation.to(r => r[1])}
-        rotation-z={poleSpring.rotation.to(r => r[2])}
+        rotation-x={poleRotationX}
       >
         <cylinderGeometry args={[0.02, 0.02, 2.0, 8]} />
         <meshStandardMaterial 
@@ -149,15 +139,12 @@ const BurningFlag = ({ position, onComplete }: BurningFlagProps) => {
         />
         
         {/* Burning flag */}
-        <animated.mesh
+        <mesh
           ref={flagRef} 
           position={[0.75, 0.7, 0]}
-          scale-x={flagSpring.scale[0]}
-          scale-y={flagSpring.scale[1]}
-          scale-z={flagSpring.scale[2]}
-          rotation-x={flagSpring.rotation[0]}
-          rotation-y={flagSpring.rotation[1]}
-          rotation-z={flagSpring.rotation[2]}
+          scale={flagScale}
+          rotation-x={flagRotationX}
+          rotation-z={flagRotationZ}
         >
           <planeGeometry args={[1.2, 0.8, 1, 1]} />
           <meshStandardMaterial 
@@ -165,12 +152,12 @@ const BurningFlag = ({ position, onComplete }: BurningFlagProps) => {
             side={THREE.DoubleSide}
             roughness={0.7}
             transparent={true}
-            opacity={flagSpring.opacity}
+            opacity={flagOpacity}
             emissive="#ff0000"
             emissiveIntensity={0.8}
           />
-        </animated.mesh>
-      </animated.mesh>
+        </mesh>
+      </mesh>
       
       {/* Base - remains in place */}
       <mesh position={[0, 0, 0]}>
