@@ -17,7 +17,8 @@ import "@fontsource/inter";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const { setBackgroundMusic } = useAudio();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { setBackgroundMusic, playSuccess } = useAudio();
   const { 
     selectedProduct, 
     setSelectedProduct,
@@ -51,13 +52,26 @@ function App() {
     
     // Add product to database
     try {
-      await addProduct(newProduct);
+      const createdProduct = await addProduct(newProduct);
       hideContextMenu();
       setIsPlacingProduct(false);
       setPlacementPosition(null);
       
-      // Refresh product list
-      fetchProducts();
+      // Play success sound
+      playSuccess();
+      
+      // Show confetti celebration
+      setShowConfetti(true);
+      
+      // Refresh product list and show the newly created product
+      await fetchProducts();
+      
+      // Select the newly created product to show it (after a slight delay)
+      setTimeout(() => {
+        if (createdProduct) {
+          setSelectedProduct(createdProduct);
+        }
+      }, 500);
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -112,6 +126,13 @@ function App() {
           <Loader />
           <FloatingTitle />
           <Toaster position="top-right" richColors />
+          
+          {/* Confetti celebration */}
+          <Confetti 
+            show={showConfetti}
+            duration={3000}
+            onComplete={() => setShowConfetti(false)}
+          />
           
           {/* Context Menu */}
           {contextMenuVisible && (
