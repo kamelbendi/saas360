@@ -15,7 +15,7 @@ interface ProductPopupHtmlProps {
   onStartBurning?: (productId: number, position: number[]) => void;
 }
 
-const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps) => {
+const ProductPopupHtml = ({ product, onClose, onDelete, onStartBurning }: ProductPopupHtmlProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -51,14 +51,18 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
       // Start burn animation
       setIsBurning(true);
       
+      // Notify parent component to start the burning animation
+      if (onStartBurning) {
+        onStartBurning(product.id, product.position);
+      }
+      
       // Only perform the actual deletion after a slight delay to let animation start
       setTimeout(async () => {
         if (onDelete) {
           await onDelete();
         }
-        
-        // We don't close the popup right away, the BurningFlag component will 
-        // trigger a page reload when animation completes
+        // We don't close the popup right away - animation completion
+        // will trigger page reload from the BurningFlag component
       }, 500);
       
     } catch (error) {

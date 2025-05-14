@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -12,6 +12,7 @@ import ShootingStars from "./ShootingStars";
 import CelestialBodies from "./CelestialBodies";
 import AnimatedBackground from "./AnimatedBackground";
 import { createRandomAsteroids } from "./FloatingAsteroid";
+import BurningFlag from "./BurningFlag";
 
 // Main component for the lunar environment (3D only)
 const LunarEnvironment = () => {
@@ -27,6 +28,29 @@ const LunarEnvironment = () => {
     hideContextMenu,
     setCameraPosition
   } = useLunarStore();
+  
+  // Track burning flag state
+  const [burningFlags, setBurningFlags] = useState<{
+    id: number;
+    position: [number, number, number];
+  }[]>([]);
+  
+  // Handler for starting a flag burning animation
+  const handleStartBurning = (productId: number, position: number[]) => {
+    setBurningFlags(prev => [
+      ...prev, 
+      { 
+        id: productId, 
+        position: position as [number, number, number] 
+      }
+    ]);
+  };
+  
+  // Handler for when burning animation completes
+  const handleBurnComplete = (id: number) => {
+    setBurningFlags(prev => prev.filter(flag => flag.id !== id));
+    // Page will reload after animation completes
+  };
 
   // Handle right click on the moon surface
   const handleRightClick = (event: any) => {
@@ -132,6 +156,15 @@ const LunarEnvironment = () => {
       
       {/* Floating asteroids */}
       {useMemo(() => createRandomAsteroids(12, 60, 30), [])}
+      
+      {/* Burning flags (when deleting) */}
+      {burningFlags.map(flag => (
+        <BurningFlag
+          key={`burning-${flag.id}`}
+          position={flag.position}
+          onComplete={() => handleBurnComplete(flag.id)}
+        />
+      ))}
       
       {/* Camera controls - limited to rotation only */}
       <OrbitControls 
