@@ -3,6 +3,15 @@ import {
   flags, type Flag, type InsertFlag,
   products, type Product, type InsertProduct 
 } from "@shared/schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { eq } from "drizzle-orm";
+
+// Initialize database connection
+const connectionString = process.env.DATABASE_URL as string;
+// For connection pooling with Postgres.js
+const queryClient = postgres(connectionString);
+export const db = drizzle(queryClient);
 
 // Extended storage interface with flag methods
 export interface IStorage {
@@ -26,53 +35,12 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
-  private flags: Map<number, Flag>;
   private userCurrentId: number;
-  private flagCurrentId: number;
 
   constructor() {
     this.users = new Map();
-    this.flags = new Map();
     this.userCurrentId = 1;
-    this.flagCurrentId = 1;
-    
-    // Add some initial flags for demonstration
-    // We need to initialize asynchronously but can't use async in constructor
-    this.initializeData();
-  }
-  
-  private async initializeData() {
-    await this.addInitialFlags();
-  }
-  
-  private async addInitialFlags() {
-    const demoFlags: InsertFlag[] = [
-      {
-        name: "CloudSync",
-        description: "Team collaboration and file sharing platform",
-        url: "https://cloudsync.example.com",
-        author: "alexharris",
-        position: [5, 0, 3]
-      },
-      {
-        name: "TaskForce",
-        description: "Project management and task tracking solution",
-        url: "https://taskforce.example.com",
-        author: "sarahsmith",
-        position: [-4, 0, 7]
-      },
-      {
-        name: "AnalyticsPro",
-        description: "Advanced analytics and reporting dashboard",
-        url: "https://analyticspro.example.com",
-        author: "michaelchen",
-        position: [3, 0, -5]
-      }
-    ];
-    
-    for (const flag of demoFlags) {
-      await this.createFlag(flag);
-    }
+    // No more in-memory storage for flags - we use the database directly
   }
 
   // User methods (from original)
@@ -93,45 +61,65 @@ export class MemStorage implements IStorage {
     return user;
   }
   
-  // Flag methods
+  // Flag methods - using database
   async getFlag(id: number): Promise<Flag | undefined> {
-    return this.flags.get(id);
+    try {
+      const results = await db.select().from(flags).where(eq(flags.id, id)).limit(1);
+      return results.length > 0 ? results[0] : undefined;
+    } catch (error) {
+      console.error("Error getting flag from database:", error);
+      return undefined;
+    }
   }
   
   async getAllFlags(): Promise<Flag[]> {
-    return Array.from(this.flags.values());
+    try {
+      return await db.select().from(flags);
+    } catch (error) {
+      console.error("Error getting all flags from database:", error);
+      return [];
+    }
   }
   
   async createFlag(insertFlag: InsertFlag): Promise<Flag> {
-    const id = this.flagCurrentId++;
-    const now = new Date();
-    
-    // Create a clean flag object with all the required properties
-    // This avoids any typing issues by not spreading potentially incompatible objects
-    const flag: Flag = {
-      id,
-      name: insertFlag.name,
-      description: insertFlag.description,
-      url: insertFlag.url,
-      author: insertFlag.author || "",
-      position: (Array.isArray(insertFlag.position) ? 
-                  // Convert each element to a number and ensure it's an array of numbers
-                  [Number(insertFlag.position[0] || 0), 
-                   Number(insertFlag.position[1] || 0), 
-                   Number(insertFlag.position[2] || 0)] 
-                 : [0, 0, 0]),
-      created_at: now
-    };
-    
-    this.flags.set(id, flag);
-    return flag;
+    try {
+      // Ensure position is a valid array of numbers
+      const position = Array.isArray(insertFlag.position) 
+        ? [
+            Number(insertFlag.position[0] || 0),
+            Number(insertFlag.position[1] || 0),
+            Number(insertFlag.position[2] || 0)
+          ]
+        : [0, 0, 0];
+      
+      // Create flag in database
+      const result = await db.insert(flags).values({
+        name: insertFlag.name,
+        description: insertFlag.description,
+        url: insertFlag.url,
+        author: insertFlag.author || "",
+        position: position,
+      }).returning();
+      
+      if (result.length === 0) {
+        throw new Error("Failed to insert flag into database");
+      }
+      
+      return result[0];
+    } catch (error) {
+      console.error("Error creating flag in database:", error);
+      throw error;
+    }
   }
   
   async deleteFlag(id: number): Promise<boolean> {
-    if (!this.flags.has(id)) {
+    try {
+      const result = await db.delete(flags).where(eq(flags.id, id)).returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error deleting flag from database:", error);
       return false;
     }
-    return this.flags.delete(id);
   }
   
   // Product methods (for backward compatibility)
