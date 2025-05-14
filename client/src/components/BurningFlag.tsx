@@ -64,15 +64,15 @@ const BurningFlag = ({ position, onComplete }: BurningFlagProps) => {
   
   // Burning animation state for flag
   const [flagSpring, flagApi] = useSpring(() => ({
-    scale: [1, 1, 1] as [number, number, number],
+    scale: [1, 1, 1] as readonly [number, number, number],
     opacity: 1,
-    rotation: [0, 0, 0] as [number, number, number],
+    rotation: [0, 0, 0] as readonly [number, number, number],
     config: { duration: burnDuration * 1000 }
   }));
   
   // Pole falling animation state
   const [poleSpring, poleApi] = useSpring(() => ({
-    rotation: [0, 0, 0] as [number, number, number],
+    rotation: [0, 0, 0] as readonly [number, number, number],
     config: { mass: 1, tension: 180, friction: 30 }
   }));
   
@@ -137,9 +137,9 @@ const BurningFlag = ({ position, onComplete }: BurningFlagProps) => {
       <animated.mesh 
         ref={poleRef}
         position={[0, 1.0, 0]} 
-        rotation-x={poleSpring.rotation[0]}
-        rotation-y={poleSpring.rotation[1]}
-        rotation-z={poleSpring.rotation[2]}
+        rotation-x={poleSpring.rotation.to(r => r[0])}
+        rotation-y={poleSpring.rotation.to(r => r[1])}
+        rotation-z={poleSpring.rotation.to(r => r[2])}
       >
         <cylinderGeometry args={[0.02, 0.02, 2.0, 8]} />
         <meshStandardMaterial 

@@ -46,6 +46,17 @@ const LunarEnvironment = () => {
     ]);
   };
   
+  // Expose the handleStartBurning function to the window object
+  // so it can be called from ProductPopupHtml via App.tsx
+  useEffect(() => {
+    window.handleStartBurning = handleStartBurning;
+    
+    return () => {
+      // Clean up
+      window.handleStartBurning = undefined;
+    };
+  }, []);
+  
   // Handler for when burning animation completes
   const handleBurnComplete = (id: number) => {
     setBurningFlags(prev => prev.filter(flag => flag.id !== id));

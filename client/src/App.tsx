@@ -220,8 +220,16 @@ function App() {
               onDelete={async () => {
                 await deleteProduct(selectedProduct.id);
                 setSelectedProduct(null);
-                // Re-fetch products to update the UI
+                // Re-fetch products to update the UI - but the page will reload automatically
+                // after the burning animation completes
                 fetchProducts();
+              }}
+              onStartBurning={(productId, position) => {
+                // This function is defined in LunarEnvironment 
+                // We'll create a temporary bridge through the window object
+                if (window.handleStartBurning && typeof window.handleStartBurning === 'function') {
+                  window.handleStartBurning(productId, position);
+                }
               }}
             />
           )}
