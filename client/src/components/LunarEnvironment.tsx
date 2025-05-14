@@ -26,7 +26,8 @@ const LunarEnvironment = () => {
     setPlacementPosition,
     showContextMenu,
     hideContextMenu,
-    setCameraPosition
+    setCameraPosition,
+    isPlacingProduct
   } = useLunarStore();
   
   // Track burning flag state
@@ -146,13 +147,14 @@ const LunarEnvironment = () => {
       {/* Interactive animated background */}
       <AnimatedBackground />
       
-      {/* Render all SaaS products */}
+      {/* Render all SaaS products - but hide them when placing a new product */}
       {products.map((product) => (
         <SaasProduct 
           key={product.id} 
           product={product} 
           isSelected={selectedProduct?.id === product.id}
           onClick={() => setSelectedProduct(product)}
+          visible={!isPlacingProduct} // Hide all products when placing a new one
         />
       ))}
       

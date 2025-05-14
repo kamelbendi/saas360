@@ -16,9 +16,10 @@ interface SaasProductProps {
   };
   isSelected: boolean;
   onClick: () => void;
+  visible?: boolean; // Add visibility control
 }
 
-const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
+const SaasProduct = ({ product, isSelected, onClick, visible = true }: SaasProductProps) => {
   const { playHit } = useAudio();
   const groupRef = useRef<THREE.Group>(null);
   const baseRef = useRef<THREE.Mesh>(null);
@@ -157,6 +158,9 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
     config: { mass: 1, tension: 100, friction: 20 }
   });
   
+  // If not visible, render nothing
+  if (!visible) return null;
+
   return (
     <group 
       ref={groupRef}
