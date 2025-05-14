@@ -127,27 +127,24 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
   // Get camera for facing rotation logic
   const { camera } = useThree();
   
-  // Get references for the name label
-  const labelRef = useRef<THREE.Group>(null);
-  
-  // Make objects face the camera with better performance
+  // Make objects face the camera with better performance - safer implementation
   useFrame(() => {
-    if (floatingRef.current) {
-      // Update flag to face camera (horizontally only)
-      const cameraXZ = new THREE.Vector3(camera.position.x, 0, camera.position.z);
-      const flagXZ = new THREE.Vector3(position.x, 0, position.z);
-      const angleToCamera = Math.atan2(
-        cameraXZ.x - flagXZ.x,
-        cameraXZ.z - flagXZ.z
-      );
-      
-      // Apply rotation to flag (Y-axis only for performance)
-      floatingRef.current.rotation.y = angleToCamera;
-    }
-    
-    // Make text label also face camera fully
-    if (labelRef.current) {
-      labelRef.current.lookAt(camera.position);
+    try {
+      if (floatingRef.current) {
+        // Update flag to face camera (horizontally only)
+        const cameraXZ = new THREE.Vector3(camera.position.x, 0, camera.position.z);
+        const flagXZ = new THREE.Vector3(position.x, 0, position.z);
+        const angleToCamera = Math.atan2(
+          cameraXZ.x - flagXZ.x,
+          cameraXZ.z - flagXZ.z
+        );
+        
+        // Apply rotation to flag (Y-axis only for performance)
+        floatingRef.current.rotation.y = angleToCamera;
+      }
+    } catch (error) {
+      // Safely handle any errors in the frame update
+      console.log("Error updating flag rotation:", error);
     }
   });
   
@@ -231,7 +228,6 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
           intensity={1.5}
           distance={3}
           color="#ffffff"
-          target={floatingRef.current}
         />
       </animated.mesh>
       
