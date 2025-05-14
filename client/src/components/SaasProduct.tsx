@@ -11,6 +11,7 @@ interface SaasProductProps {
     name: string;
     description: string;
     url: string;
+    founder_twitter?: string;
     position: number[];
   };
   isSelected: boolean;
@@ -248,16 +249,30 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
             padding: '5px 12px',
             fontSize: '14px',
             fontWeight: 'bold', 
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            color: 'white',
-            border: `2px solid ${hovered ? "#ffff00" : "white"}`,
+            backgroundColor: 'white',
+            color: '#111',
+            border: `2px solid ${hovered ? "#ffff00" : "#007bff"}`,
             borderRadius: '6px',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4)',
             transform: `scale(${hovered ? 1.1 : 1})`,
             transition: 'all 0.2s ease',
-            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
+          {product.founder_twitter && (
+            <img 
+              src={`https://unavatar.io/twitter/${product.founder_twitter}`}
+              alt={`${product.founder_twitter}'s profile`}
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                border: '1px solid #007bff'
+              }}
+            />
+          )}
           {product.name}
         </div>
       </Html>

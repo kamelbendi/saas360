@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ExternalLink, X, Trash2, Twitter } from "lucide-react";
+import { ExternalLink, X, Trash2, Flame } from "lucide-react";
 
 interface ProductPopupHtmlProps {
   product: {
@@ -84,7 +84,8 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
         className={`product-popup ${isVisible ? 'visible' : ''}`}
         style={{
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-          backgroundColor: 'white'
+          backgroundColor: 'rgba(15, 23, 42, 0.95)', // Dark background
+          color: 'white'
         }}
       >
         <div className="popup-glow"></div>
@@ -104,7 +105,10 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
           {product.founder_twitter && (
             <div className="founder-section">
               <div className="founder-header">
-                <Twitter size={16} className="twitter-icon" />
+                {/* X logo SVG */}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="twitter-icon">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
                 <span>Founded by:</span>
               </div>
               <div className="founder-profile">
@@ -131,10 +135,10 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
             onClick={handleDelete}
             className="delete-btn"
             disabled={isDeleting}
-            aria-label="Delete product"
+            aria-label="Burn product"
           >
-            <Trash2 size={14} />
-            <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+            <Flame size={14} />
+            <span>{isDeleting ? 'Burning...' : 'Burn 🔥 ($5)'}</span>
           </button>
           
           <a 
