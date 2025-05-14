@@ -381,6 +381,55 @@ canvas {
   color: rgba(255, 255, 255, 0.8);
 }
 
+/* Founder section styling */
+.founder-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.founder-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: #1d9bf0; /* Twitter blue */
+  font-size: 13px;
+}
+
+.twitter-icon {
+  color: #1d9bf0;
+}
+
+.founder-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.founder-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #1d9bf0;
+  background-color: #f2f2f2;
+  object-fit: cover;
+}
+
+.founder-link {
+  color: #1d9bf0;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  font-size: 14px;
+}
+
+.founder-link:hover {
+  color: #0c7abf;
+  text-decoration: underline;
+}
+
 .popup-footer {
   display: flex;
   justify-content: space-between;

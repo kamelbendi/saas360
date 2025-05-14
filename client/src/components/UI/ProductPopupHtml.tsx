@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ExternalLink, X, Trash2 } from "lucide-react";
+import { ExternalLink, X, Trash2, Twitter } from "lucide-react";
 
 interface ProductPopupHtmlProps {
   product: {
@@ -7,6 +7,7 @@ interface ProductPopupHtmlProps {
     name: string;
     description: string;
     url: string;
+    founder_twitter?: string;
   };
   onClose: () => void;
   onDelete?: () => void;
@@ -100,6 +101,29 @@ const ProductPopupHtml = ({ product, onClose, onDelete }: ProductPopupHtmlProps)
         
         <div className="popup-body">
           <p>{product.description}</p>
+          {product.founder_twitter && (
+            <div className="founder-section">
+              <div className="founder-header">
+                <Twitter size={16} className="twitter-icon" />
+                <span>Founded by:</span>
+              </div>
+              <div className="founder-profile">
+                <img 
+                  src={`https://unavatar.io/twitter/${product.founder_twitter}`} 
+                  alt={`${product.founder_twitter}'s profile`} 
+                  className="founder-avatar"
+                />
+                <a 
+                  href={`https://twitter.com/${product.founder_twitter}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="founder-link"
+                >
+                  @{product.founder_twitter}
+                </a>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="popup-footer">

@@ -23,7 +23,7 @@ export const products = pgTable("products", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   url: text("url").notNull(),
-  founder_twitter: text("founder_twitter"),
+  founder_twitter: text("founder_twitter").default("").notNull(),
   position: jsonb("position").$type<number[]>().notNull(),
   created_at: timestamp("created_at").defaultNow().notNull()
 });

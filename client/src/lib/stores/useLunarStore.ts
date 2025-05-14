@@ -7,6 +7,7 @@ export interface SaasProduct {
   name: string;
   description: string;
   url: string;
+  founder_twitter?: string;
   position: number[];
   created_at?: string;
 }
