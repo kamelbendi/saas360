@@ -17,30 +17,37 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// SaaS products schema
-export const products = pgTable("products", {
+// SaaS flags schema
+export const flags = pgTable("flags", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
   url: text("url").notNull(),
-  founder_twitter: text("founder_twitter").default("").notNull(),
+  author: text("author").default("").notNull(),
   position: jsonb("position").$type<number[]>().notNull(),
   created_at: timestamp("created_at").defaultNow().notNull()
 });
 
-export const insertProductSchema = createInsertSchema(products).pick({
+export const insertFlagSchema = createInsertSchema(flags).pick({
   name: true,
   description: true,
   url: true,
-  founder_twitter: true,
+  author: true,
   position: true,
 });
 
-// Add validation/transformation to ensure founder_twitter is always a string
-export const insertProductSchema2 = insertProductSchema.transform((data) => ({
+// Add validation/transformation to ensure author is always a string
+export const insertFlagSchema2 = insertFlagSchema.transform((data) => ({
   ...data,
-  founder_twitter: data.founder_twitter || ""
+  author: data.author || ""
 }));
 
-export type InsertProduct = z.infer<typeof insertProductSchema>;
-export type Product = typeof products.$inferSelect;
+export type InsertFlag = z.infer<typeof insertFlagSchema>;
+export type Flag = typeof flags.$inferSelect;
+
+// For backward compatibility
+export const products = flags;
+export const insertProductSchema = insertFlagSchema;
+export const insertProductSchema2 = insertFlagSchema2;
+export type InsertProduct = InsertFlag;
+export type Product = Flag;
