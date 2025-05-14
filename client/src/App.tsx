@@ -138,13 +138,14 @@ function App() {
           />
           
           {/* Context Menu */}
-          {contextMenuVisible && (
+          {contextMenuVisible && !isPlacingProduct && (
             <SaasPlacementMenu 
               position={contextMenuPosition}
               onClose={hideContextMenu}
               onAddProduct={() => {
                 setIsPlacingProduct(true);
                 setSelectedProduct(null);
+                hideContextMenu(); // Hide the context menu when opening the form
               }}
             />
           )}
