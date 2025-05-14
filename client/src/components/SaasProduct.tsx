@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { Text, Html, useCursor, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { useAudio } from "../lib/stores/useAudio";
@@ -122,12 +122,26 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
     onClick();
   };
   
-  // Flag geometry - simple flat plane
-  const flagGeometry = useMemo(() => {
-    const geometry = new THREE.PlaneGeometry(1.5, 0.8, 4, 4);
-    return geometry;
-  }, []);
-
+  // Get camera for facing rotation logic
+  const { camera } = useThree();
+  
+  // Make objects face the camera
+  useFrame(() => {
+    if (floatingRef.current) {
+      // Flag faces camera
+      const flagPosition = new THREE.Vector3();
+      floatingRef.current.getWorldPosition(flagPosition);
+      
+      // Make flag face camera
+      const lookAtPosition = new THREE.Vector3().copy(flagPosition);
+      lookAtPosition.x = camera.position.x;
+      lookAtPosition.z = camera.position.z;
+      lookAtPosition.y = flagPosition.y;
+      
+      floatingRef.current.lookAt(lookAtPosition);
+    }
+  });
+  
   // No spring animation for the pole - completely stable
   const poleSpring = useSpring({
     rotateX: 0,
@@ -174,14 +188,12 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
           metalness={0.9}
         />
         
-        {/* Flag with logo - positioned right */}
-        <mesh 
+        {/* Flag with logo - will make it face camera in useFrame */}
+        <mesh
           ref={floatingRef} 
-          position={[0.35, 0.7, 0]} 
-          rotation={[0, Math.PI/2, 0]}
-          scale={[0.75, 0.5, 0.75]}
+          position={[0.75, 0.7, 0]}
         >
-          <planeGeometry args={[1.5, 0.8, 4, 4]} />
+          <planeGeometry args={[1.2, 0.8, 1, 1]} />
           <meshStandardMaterial 
             map={logoTexture}
             side={THREE.DoubleSide}
@@ -194,21 +206,29 @@ const SaasProduct = ({ product, isSelected, onClick }: SaasProductProps) => {
       </animated.mesh>
       
       {/* Product name label that always faces the camera */}
-      <Html position={[0, 2.2, 0]} center transform occlude>
+      <Html 
+        position={[0, 2.2, 0]} 
+        center 
+        transform
+        occlude
+        distanceFactor={10} // Makes text maintain consistent size regardless of distance
+      >
         <div 
           className={`product-label ${hovered ? 'product-label-hover' : ''}`}
           style={{ 
             pointerEvents: 'none', 
             whiteSpace: 'nowrap',
-            fontSize: '12px',
+            fontSize: '14px',
             fontWeight: 'bold', 
-            padding: '4px 8px',
-            backgroundColor: 'white',
+            padding: '5px 10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
             color: 'black',
             borderRadius: '4px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
             opacity: hovered ? 1 : 0.9,
-            transform: `scale(${hovered ? 1.1 : 1})`
+            transform: `scale(${hovered ? 1.1 : 1})`,
+            transition: 'all 0.2s ease',
+            border: '1px solid rgba(0,0,0,0.1)'
           }}
         >
           {product.name}
