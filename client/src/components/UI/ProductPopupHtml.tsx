@@ -8,6 +8,7 @@ interface ProductPopupHtmlProps {
     description: string;
     url: string;
     founder_twitter?: string;
+    author?: string;
     position: number[];
   };
   onClose: () => void;
@@ -128,7 +129,8 @@ const ProductPopupHtml = ({ product, onClose, onDelete, onStartBurning }: Produc
         
         <div className="popup-body">
           <p>{product.description}</p>
-          {product.founder_twitter && (
+          {/* Display author info if either founder_twitter or author exists */}
+          {(product.founder_twitter || product.author) && (
             <div className="founder-section">
               <div className="founder-header">
                 {/* X logo SVG */}
@@ -138,18 +140,19 @@ const ProductPopupHtml = ({ product, onClose, onDelete, onStartBurning }: Produc
                 <span>Founded by:</span>
               </div>
               <div className="founder-profile">
+                {/* Use founder_twitter for compatibility, fall back to author */}
                 <img 
-                  src={`https://unavatar.io/twitter/${product.founder_twitter}`} 
-                  alt={`${product.founder_twitter}'s profile`} 
+                  src={`https://unavatar.io/twitter/${product.founder_twitter || product.author}`} 
+                  alt={`${product.founder_twitter || product.author}'s profile`} 
                   className="founder-avatar"
                 />
                 <a 
-                  href={`https://twitter.com/${product.founder_twitter}`} 
+                  href={`https://twitter.com/${product.founder_twitter || product.author}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="founder-link"
                 >
-                  @{product.founder_twitter}
+                  @{product.founder_twitter || product.author}
                 </a>
               </div>
             </div>
